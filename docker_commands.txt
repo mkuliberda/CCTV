@@ -1,0 +1,15 @@
+ 
+ //remove all containers
+ docker rm -f $(docker ps -a -q)
+ 
+//rebuild container
+docker build -t cctv-main .
+
+ //start container
+ docker run --privileged --env LD_LIBRARY_PATH=/opt/vc/lib -v /opt/vc:/opt/vc -v /home/pi:/home/pi --rm cctv-main
+
+ //list images
+ docker image ls
+
+ //list containers all
+ docker ps -a
