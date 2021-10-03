@@ -4,12 +4,11 @@ services:
 
  main:
   container_name: cctv_main
-  image: cctv_main
+  image: ${DOCKER_ACCT}/cctv_main
   build:
     context: .
     dockerfile: main.dockerfile
   privileged: true
-
   volumes:
     - /opt/vc:/opt/vc
     - /home/pi:/home/pi
