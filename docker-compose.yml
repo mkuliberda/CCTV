@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+
+ main:
+  container_name: cctv_main
+  image: cctv_main
+  build:
+    context: .
+    dockerfile: main.dockerfile
+  privileged: true
+
+  volumes:
+    - /opt/vc:/opt/vc
+    - /home/pi:/home/pi
+  
+  environment:
+    - LD_LIBRARY_PATH=/opt/vc/lib
