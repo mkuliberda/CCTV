@@ -8,6 +8,7 @@ import io
 import itertools
 import RPi.GPIO as GPIO
 
+#TODO: WIP, structure changes and in development
 
 # Pin control
 PIRSENSOR_PIN = 18

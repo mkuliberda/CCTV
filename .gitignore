@@ -1,3 +1,5 @@
 /camera
+/logs
 *.h264
 env_config.sh
+__pycache__
