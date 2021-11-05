@@ -3,19 +3,20 @@ from Observer import observer_abc as AbsObs
 
 class AbstractSubject(object):
     __metaclass__ = abc.ABCMeta
-    _observers = set()
+    _observers = list()
 
     def attach(self, observer):
         if not isinstance(observer, AbsObs.AbstractObserver):
             raise TypeError("Incorrect type of argument. Should be of type AbstractObserver")
-        self._observers.add(observer)
+        self._observers.append(observer)
 
     def detach(self, observer):
         self._observers.remove(observer)
 
     def notify(self, value=None):
         for observer in self._observers:
-            if value == None:
+            #print("notifying observer: ", observer)
+            if value is None:
                 observer.update()
             else:
                 observer.update(value)

@@ -3,10 +3,10 @@ import abc
 class AbstractObserver(object):
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractmethod
     def update(self, value):
         pass
 
-    @abc.abstractmethod
     def __enter__(self):
         return self
     

@@ -4,13 +4,10 @@ from Observer import subject_abc as AbsSub
 import time
 
 
-#TODO: observer design pattern as Subject to implement here
 class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
     def __init__(self, detector_pin, refresh_rate_seconds=10):
-        print("PIRMotionDetector ctor")
         self._is_running = True
         self._pin = detector_pin
-        self._previous_state = False
         self._current_state = False
         self._refresh_rate_seconds = refresh_rate_seconds
         self._dummy_cnt = 0
@@ -19,7 +16,6 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
         threading.Thread.__init__(self)
 
     def __del__(self):
-        print ("PIRMotionDetector dtor")
         GPIO.cleanup()
 
     def terminate(self):
@@ -27,12 +23,7 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
         
     def run(self):
         while self._is_running:
-            self._current_state = self.read_pin()
-            print(self._is_running, self._current_state)
-            if self._current_state != self._previous_state:
-                self.notify()
-                print("notify")
-                self._previous_state = self._current_state
+            self.notify(self.read_pin())
             time.sleep(self._refresh_rate_seconds)
 
     def get_state(self):
