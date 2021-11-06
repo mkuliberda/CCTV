@@ -3,7 +3,7 @@ from Observer import observer_abc as AbsObs
 
 class AbstractSubject(object):
     __metaclass__ = abc.ABCMeta
-    _observers = list()
+    _observers = []
 
     def attach(self, observer):
         if not isinstance(observer, AbsObs.AbstractObserver):
