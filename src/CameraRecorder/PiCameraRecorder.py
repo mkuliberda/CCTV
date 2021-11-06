@@ -6,7 +6,7 @@ from threading import Thread
 from LightingController import *
 
 class PiCameraRecorder(AbsObserver.AbstractObserver):
-    def __init__(self, LightingController, video_path, timestamp=True, timeout=10, resolution=[1280, 760], framerate=20, framerate_range=None, rotation=0):
+    def __init__(self, AbstractLightControl, video_path, timestamp=True, timeout=10, resolution=[1280, 760], framerate=20, framerate_range=None, rotation=0):
         self._resolution = resolution
         self._framerate = framerate
         self._framerate_range = framerate_range
@@ -15,7 +15,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
         self._timestamp = timestamp
         self._timeout = timeout
         self._is_recording = False
-        self._lgt_ctrl = LightingController
+        self._lgt_ctrl = AbstractLightControl
         
     def update(self, value):
         if self._is_recording == False:
@@ -33,7 +33,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
             camera.framerate = self._framerate/1
             camera.resolution = self._resolution
             print("recording started...")
-            self._lgt_ctrl.turnON()
+            self._lgt_ctrl.turn_on()
             if self._timestamp == True:
                 camera.start_recording(self._video_path + '_' + str(now.year) + str(now.month) + str(now.day)+ str(now.hour) + str(now.minute) + str(now.second) + '.h264')
             else:
@@ -41,5 +41,5 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
             time.sleep(self._timeout)
             print("recording stopped")
             camera.stop_recording()
-            self._lgt_ctrl.turnOFF()
+            self._lgt_ctrl.turn_off()
             self._is_recording = False

@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
+from LightingController import AbstractLightControl as AbsLgtCtrl
 
-class LightingController():
+class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
     def __init__(self, light_pin):
         self._is_running = False
         self.pin = light_pin
@@ -9,16 +10,16 @@ class LightingController():
 
     def __del__(self):
         GPIO.cleanup()
-       
-    def turnON(self):
+      
+    def turn_on(self):
         print("light on")
         GPIO.output(self.pin, GPIO.HIGH)
         self._is_running = True
         
-    def turnOFF(self):
+    def turn_off(self):
         print("light off")
         GPIO.output(self.pin, GPIO.LOW)
         self._is_running = False
         
-    def getState(self):
+    def get_state(self):
         return self._is_running
