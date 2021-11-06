@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 from LightingController import AbstractLightControl as AbsLgtCtrl
 
+
 class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
     def __init__(self, light_pin):
         self._is_running = False

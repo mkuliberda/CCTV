@@ -35,4 +35,3 @@ def run():
             n = input()    
         except EOFError as e:
             break
-

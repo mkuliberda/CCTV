@@ -15,7 +15,6 @@ class AbstractSubject:
 
     def notify(self, value=None):
         for observer in self._observers:
-            #print("notifying observer: ", observer)
             if value is None:
                 observer.update()
             else:
@@ -27,4 +26,4 @@ class AbstractSubject:
 
     @abc.abstractmethod
     def __exit__(self, exc_type, exc_value, traceback):
-        pass#self._observers.clear()
+        pass

@@ -5,6 +5,7 @@ from Observer import observer_abc as AbsObserver
 from threading import Thread
 from LightingController import *
 
+
 class PiCameraRecorder(AbsObserver.AbstractObserver):
     def __init__(self, AbstractLightControl, video_path, subject, timestamp=True, timeout=10, resolution=[1280, 760], framerate=20, framerate_range=None, rotation=0):
         self._resolution = resolution

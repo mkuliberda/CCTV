@@ -3,5 +3,5 @@ import datetime
 from Observer import observer_abc as AbsObserver
 
 
-class UsbCameraRecorder(AbsObserver):
+class UsbCameraRecorder(AbsObserver.AbstractObserver):
     pass
