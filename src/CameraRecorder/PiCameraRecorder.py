@@ -21,6 +21,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
         self._lgt_ctrl = AbstractLightControl
         self._subject = subject
         self._subject.attach(self)
+        
     def update(self, value):
         if self._is_recording is False and value is True:
             recording_thread = Thread(target=self.record)
