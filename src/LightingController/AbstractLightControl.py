@@ -1,7 +1,7 @@
 import abc
 
 
-class AbstractLightControl(object):
+class AbstractLightControl:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
