@@ -7,6 +7,7 @@ class AbstractObserver(object):
     def update(self, value):
         pass
 
+   #Context manager methods
     def __enter__(self):
         return self
     

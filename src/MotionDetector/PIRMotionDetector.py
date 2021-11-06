@@ -14,6 +14,7 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self._pin, GPIO.IN)
         threading.Thread.__init__(self)
+        self.start()
 
     def __del__(self):
         GPIO.cleanup()
@@ -24,6 +25,7 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
     def run(self):
         while self._is_running:
             self.notify(self.read_pin())
+            print("PIR run")
             time.sleep(self._refresh_rate_seconds)
 
     def get_state(self):
@@ -31,4 +33,9 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
 
     def read_pin(self):
         self._dummy_cnt += 1#
-        return  self._dummy_cnt % 2 == 1#not GPIO.input(self._pin)
+        return self._dummy_cnt % 7 == 0 #not GPIO.input(self._pin)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.terminate()
+        self.join()
+        self._observers.clear()

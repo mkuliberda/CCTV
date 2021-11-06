@@ -21,8 +21,10 @@ class AbstractSubject(object):
             else:
                 observer.update(value)
 
+    #Context manager methods
     def __enter__(self):
         return self
 
+    @abc.abstractmethod
     def __exit__(self, exc_type, exc_value, traceback):
-        self._observers.clear()
+        pass#self._observers.clear()
