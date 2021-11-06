@@ -1,7 +1,7 @@
 import abc
 from Observer import observer_abc as AbsObs
 
-class AbstractSubject(object):
+class AbstractSubject:
     __metaclass__ = abc.ABCMeta
     _observers = []
 
