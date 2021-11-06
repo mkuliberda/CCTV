@@ -21,7 +21,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
         self._subject.attach(self)
         
     def update(self, value):
-        if self._is_recording == False and value == True:
+        if self._is_recording is False and value is True:
             recording_thread = Thread(target=self.record)
             recording_thread.start()
             self._is_recording = True
@@ -37,7 +37,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
             camera.resolution = self._resolution
             print("recording started...")
             self._lgt_ctrl.turn_on()
-            if self._timestamp == True:
+            if self._timestamp is True:
                 camera.start_recording(self._video_path + '_' + str(now.year) + str(now.month) + str(now.day)+ str(now.hour) + str(now.minute) + str(now.second) + '.h264')
             else:
                 camera.start_recording(self._video_path + '.h264')
