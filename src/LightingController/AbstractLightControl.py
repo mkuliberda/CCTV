@@ -6,12 +6,12 @@ class AbstractLightControl:
 
     @abc.abstractmethod
     def turn_on(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def turn_off(self):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def get_state(self):
-        pass
+        raise NotImplementedError

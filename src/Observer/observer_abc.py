@@ -5,7 +5,7 @@ class AbstractObserver:
 
     @abc.abstractmethod
     def update(self, value):
-        pass
+        raise NotImplementedError
 
    #Context manager methods
     def __enter__(self):
@@ -13,4 +13,4 @@ class AbstractObserver:
     
     @abc.abstractmethod
     def __exit__(self, exc_type, exc_value, traceback):
-        pass
+        raise NotImplementedError
