@@ -27,10 +27,15 @@ def waitForKeyPress():
         if ch == 'q':
                 break_now = True
                 break
-            
+
+def dockerized_run():
+    print("Running..")
+    while True:
+        pass 
+
 def run():
     print("Running.. Hit Ctrl-D to exit")
-    while True: 
+    while True:
         try:
             n = input()    
         except EOFError as e:
