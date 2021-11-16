@@ -7,7 +7,7 @@ class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
         self._is_running = False
         self.pin = light_pin
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.pin, GPIO.OUT)
+        GPIO.setup(self.pin, GPIO.OUT, initial=0)
 
     def __del__(self):
         GPIO.cleanup()

@@ -3,13 +3,21 @@ from curses import ascii
 import time
 import sys
 from Gsm import AbstractGsm as AbsGsm
+from Observer import observer_abc as AbsObserver
+from threading import Thread
 
-class M590(AbsGsm.AbstractGsm):
-
-    def __init__(self):
+class M590MessageSender(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
+    def __init__(self, subject, recipient, message, port, baudrate, rd_buffer_size=31):
         self._registered = False
         self._registration_status = "Not registered"
         self._rd_buffer_size = 1024
+        self._recipient = recipient
+        self._is_sending = False
+        self._message = message
+        self._subject = subject
+        self._old_value = False
+        self.open(port, baudrate, rd_buffer_size)
+        self._subject.attach(self)
 
     def open(self, port, baudrate, rd_buffer_size=31):
         self.ser = serial.Serial(port, baudrate, timeout=1)
@@ -17,22 +25,43 @@ class M590(AbsGsm.AbstractGsm):
         self.ser.flushInput()
         self.ser.flushOutput()
         self.send_command('ATE0\r') #turn off echo 
-        self._registered = self.is_registered()
+        if not self.send_command('AT+CMGF=1\r'): #set sms mode to 
+            return "Error setting mode to text" 
+        if not self.send_command('AT+CSCS=\"GSM\"\r'):
+            return "Error setting character set" 
 
-    def is_registered(self):
         self._registered = self.get_registration_status()[0]
+
+    #def __del__(self):
+        #self.ser.close()
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._subject.detach(self)
+        self.ser.close()
+
+    def update(self, value):
+        print("M590 update: ", self.is_registered(), self._is_sending, value)
+        if value != self._old_value:
+            self._old_value = value
+            if self.is_registered() and self._is_sending is False and value is True:
+                self._is_sending = True
+                print(self.send_sms(self._recipient, self._message))
+           
+    def is_registered(self):
         return self._registered
 
     def close(self):
         self.ser.close()
 
-    def send_command(self, command):
+    def send_command(self, command='AT\r'):
         self.ser.write(command.encode())
         data = self.ser.read(self._rd_buffer_size).decode()
         if "OK\r\n" in data:
             return True
         if "ERROR" in data:
             print("Error ", data, " in command: ", command)
+            return False
+        else:
             return False
 
     def send_receive(self, cmd='AT\r'):
@@ -78,14 +107,22 @@ class M590(AbsGsm.AbstractGsm):
     def send_sms(self, recipient="", text=""):
         self.ser.flushInput()
         self.ser.flushOutput()
-        if not self.send_command('AT+CMGF=1\r'): #set sms mode to text
-            return "Error setting mode to text" 
-        if not self.send_command('AT+CSCS=\"GSM\"\r'):
-            return "Error setting character set" 
-        if ">" in self.send_receive('AT+CMGS=\"' + recipient + '\"\r'):
-            self.send_receive(text)
-            self.ser.write([26])
-            time.sleep(2)
-            return self.ser.read(self._rd_buffer_size).decode()
-        else:
-            return self.send_receive()
+        if self.send_command() is True:
+            self.ser.flushInput()
+            self.ser.flushOutput()
+            if ">" in self.send_receive('AT+CMGS=\"' + recipient + '\"\r'):
+                self.send_receive(text)
+                self.ser.write([26])
+                #time.sleep(2)
+                ret = self.ser.read(self._rd_buffer_size).decode()
+                self._is_sending = False
+                return ret
+            else:
+                #time.sleep(2)
+                #self._is_sending = False
+                #self.ser.write([26])
+                #return self.send_receive()
+                ret = self.ser.read(self._rd_buffer_size).decode()
+                self._is_sending = False
+                return ret
+
