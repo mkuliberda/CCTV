@@ -6,7 +6,7 @@ from Gsm import AbstractGsm as AbsGsm
 from Observer import observer_abc as AbsObserver
 from threading import Thread
 
-class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
+class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
     def __init__(self, subject, recipient, message, port, baudrate, rd_buffer_size=31):
         self._registered = False
         self._registration_status = "Not registered"
@@ -89,11 +89,13 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
             return [True, "Local"]
         if data[1] == '5':
             return [True, "Roaming"]
+        if data[1] == '2':
+            return [False, "Searching"]
         else: 
             return [False, "Not registered or unknown"]
 
     def get_module_status(self):
-        status_dict = {0:"READY", 2:"UNKNOWN", 3:"RINGING", 4:"CALLING", 5:"ASLEEP"}
+        status_dict = {0:"READY", 2:"UNKNOWN", 3:"RINGING", 4:"CALLING"}
         data = self.send_receive('AT+CPAS\r')
         if "OK\r\n" not in data: return [-1, -1, -1]
         data = data.split('\r\n')
@@ -102,7 +104,7 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
     
     def send_sms(self, recipient="", text=""):
         if len(recipient) == 0:
-            raise ValueError("Provide recipient phone number")        
+            raise ValueError("Provide recipient phone number")
         self.ser.flushInput()
         self.ser.flushOutput()
         if self.send_command() is True:
@@ -119,3 +121,5 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
                 self._is_sending = False
                 return ret
 
+    def send_mms(self, recipient="", image_path=""):
+        pass
