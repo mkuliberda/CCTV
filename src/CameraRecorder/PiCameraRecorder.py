@@ -36,7 +36,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
     def record(self):
         with PiCamera() as camera:
             now = datetime.datetime.now()
-            timestamp_formatted = str(now.year) + str(now.month) + str(now.day)+ str(now.hour) + str(now.minute) + str(now.second)
+            timestamp_formatted = str(now.year) + str(now.month) + str(now.day) + "{:02d}".format(now.hour) + "{:02d}".format(now.minute) + "{:02d}".format(now.second)
             camera.rotation = self._rotation
             camera.framerate = self._framerate/1
             camera.resolution = self._resolution

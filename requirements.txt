@@ -2,4 +2,4 @@ ffmpeg-python
 picamera
 RPi.GPIO
 utils
-serial
+pyserial
