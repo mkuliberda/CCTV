@@ -52,8 +52,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
                 camera.start_recording(self._video_path + '_' + timestamp_formatted + '.h264')
             else:
                 camera.start_recording(self._video_path + '.h264')
-
-            time.sleep(self._timeout)
+            camera.wait_recording(self._timeout)
             camera.stop_recording()
             print("recording stopped")
             self._lgt_ctrl.turn_off()
