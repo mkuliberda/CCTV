@@ -21,7 +21,7 @@ class AbstractGsm:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def read_all_mms(self):
+    def get_datetime_string(self):
         raise NotImplementedError
 
     @abc.abstractmethod

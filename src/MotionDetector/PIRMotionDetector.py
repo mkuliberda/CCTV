@@ -10,13 +10,12 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
         self._pin = detector_pin
         self._current_state = False
         self._refresh_rate_seconds = refresh_rate_seconds
-        #GPIO.setmode(GPIO.BCM)
         GPIO.setup(self._pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         threading.Thread.__init__(self)
         self.start()
 
     def __del__(self):
-        pass#GPIO.cleanup()
+        pass
 
     def terminate(self):
         self._is_running = False
