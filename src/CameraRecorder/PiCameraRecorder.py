@@ -4,6 +4,7 @@ from  picamera import PiCamera
 from Observer import observer_abc as AbsObserver
 from threading import Thread
 from LightingController import *
+from FileUtilities import FileSanitizer
 
 
 class PiCameraRecorder(AbsObserver.AbstractObserver):
@@ -40,6 +41,9 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
             camera.rotation = self._rotation
             camera.framerate = self._framerate/1
             camera.resolution = self._resolution
+            
+            with FileSanitizer.FileSanitizer() as file_sanitizer:
+                file_sanitizer.run()
 
             self._lgt_ctrl.turn_on()
             if self._picture_timestamp is True:
