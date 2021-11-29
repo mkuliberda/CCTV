@@ -10,8 +10,8 @@ class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
         GPIO.setup(self.pin, GPIO.OUT)
         GPIO.output(self.pin, GPIO.HIGH)
 
-    def __del__(self):
-        pass#GPIO.cleanup()
+    #def __del__(self):
+    #    GPIO.cleanup()
       
     def turn_on(self):
         print("light on")

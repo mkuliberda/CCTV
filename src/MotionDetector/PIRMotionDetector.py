@@ -14,9 +14,6 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
         threading.Thread.__init__(self)
         self.start()
 
-    def __del__(self):
-        pass
-
     def terminate(self):
         self._is_running = False
         
