@@ -6,7 +6,7 @@ class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
     def __init__(self, light_pin):
         self._is_running = False
         self.pin = light_pin
-        #GPIO.setmode(GPIO.BCM)
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
         GPIO.output(self.pin, GPIO.HIGH)
 

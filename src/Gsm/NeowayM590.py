@@ -2,34 +2,15 @@ import serial
 from time import sleep
 from Gsm import AbstractGsm as AbsGsm
 from Observer import observer_abc as AbsObserver
-import datetime
 
 class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
     def __init__(self, subject, port, baudrate, rd_buffer_size=31):
-        self._registered = False
-        self._recipient = ""
-        self._message = ""
-        self._fatal_error_counter = 0
-        self._is_sending = False
         self._subject = subject
         self._old_value = False
         self.open(port, baudrate, rd_buffer_size)
         if subject is not None:
             self._subject.attach(self)
-
-    def set_msg_recipient(self, recipient):
-        self._recipient = recipient
-
-    def set_msg_text(self, text):
-        self._message = text
-
-    def get_datetime_string(self):
-        dt_string = self.send_receive("at+cclk?\r")[10:27]
-        try:
-            return datetime.datetime.strptime(dt_string, "%y/%m/%d,%H:%M:%S")
-        except ValueError as e:
-            print(e)
-            return None
+        AbsGsm.AbstractGsm.__init__(self)
 
     def open(self, port, baudrate, rd_buffer_size):
         self.ser = serial.Serial(port, baudrate, timeout=1)
@@ -82,9 +63,6 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
                         self.clear_buffers()
                     print(self.send_sms(self._recipient, self._message))
            
-    def is_registered(self):
-        return self._registered
-
     def close(self):
         self.ser.close()
 
@@ -136,15 +114,15 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
         try:
             if data[1] == '1':
                 self._registered = True
-                return [True, "Local"]
+                return [True, "LOCAL"]
             if data[1] == '5':
                 self._registered = True
-                return [True, "Roaming"]
+                return [True, "ROAMING"]
             else: 
                 self._registered = False
-                return [False, "Not registered or unknown"]
+                return [False, "NOT REGISTERED OR UNKNOWN"]
         except IndexError as e:
-            return [False, "Unknown Error"]
+            return [False, e]
 
     def get_module_status(self):
         status_dict = {0:"READY", 2:"UNKNOWN", 3:"RINGING", 4:"CALLING", 5:"ASLEEP"}
@@ -187,5 +165,8 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
         except UnicodeDecodeError:
             self.ser.reset_input_buffer()
             return "ERROR\r\n"
+
+    def send_mms(self, recipient, message, image_path):
+        print("MMS feature is not avbl on this machine")
 
 
