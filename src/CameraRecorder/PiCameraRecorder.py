@@ -3,11 +3,11 @@ from  picamera import PiCamera
 from Observer import observer_abc as AbsObserver
 from threading import Thread
 from LightingController import *
-from FileUtilities import FileSanitizer
+from FileUtilities import FileDeleter as FileDeleter
 
 
 class PiCameraRecorder(AbsObserver.AbstractObserver):
-    def __init__(self, AbstractLightControl, subject,  video_path="", picture_path="", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
+    def __init__(self, AbstractLightControl, subject, datetime_fmt="%y%m%d%H%M%S", video_path="", picture_path="", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
         if resolution is None:
             resolution = [1280, 760]
         self._resolution = resolution
@@ -22,6 +22,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
         self._is_recording = False
         self._lgt_ctrl = AbstractLightControl
         self._subject = subject
+        self._datetime_fmt = datetime_fmt
         self._subject.attach(self)
         
     def update(self, value):
@@ -35,13 +36,15 @@ class PiCameraRecorder(AbsObserver.AbstractObserver):
         
     def record(self):
         with PiCamera() as camera:
-            now_str = dt.now().strftime("%y%m%d%H%M%S")
+            now_str = dt.now().strftime(self._datetime_fmt)
             camera.rotation = self._rotation
             camera.framerate = self._framerate/1
             camera.resolution = self._resolution
             
-            with FileSanitizer.FileSanitizer() as file_sanitizer:
-                file_sanitizer.run()
+            with FileDeleter.FileDeleter("h264", path="camera", files_limit=30) as video_cleaner,\
+                 FileDeleter.FileDeleter("jpg", path="camera", files_limit=50) as jpg_cleaner:
+                video_cleaner.run()
+                jpg_cleaner.run()
 
             self._lgt_ctrl.turn_on()
             if self._picture_timestamp is True:

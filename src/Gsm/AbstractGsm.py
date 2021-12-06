@@ -10,6 +10,7 @@ class AbstractGsm:
         self._message = ""
         self._fatal_error_counter = 0
         self._is_sending = False
+        self._img_file_scheme = None
 
     @abc.abstractmethod
     def open(self, port, baudrate):
@@ -26,6 +27,10 @@ class AbstractGsm:
     @abc.abstractmethod
     def set_msg_text(self, text):
         self._message = text
+
+    @abc.abstractmethod
+    def set_img_file_scheme(self, scheme):
+        self._img_file_scheme = scheme
 
     @abc.abstractmethod
     def is_registered(self):

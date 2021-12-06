@@ -2,6 +2,8 @@ import serial
 from time import sleep
 from Gsm import AbstractGsm as AbsGsm
 from Observer import observer_abc as AbsObserver
+import glob
+import os
 
 class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
     def __init__(self, subject, port, baudrate, rd_buffer_size=31):
@@ -44,10 +46,7 @@ class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
             print("resetting buffer")
             sleep(2)
         self.ser.reset_input_buffer()
-        self.ser.reset_output_buffer()
-    
-    def reset_module(self):
-        pass    
+        self.ser.reset_output_buffer()  
 
     def update(self, value):
         print("SIM800L update, registered:" + str(self.is_registered()) + ", sending mms:" + str(self._is_sending) + ", pir_value:" + str(value) + ", fatal counter: " + str(self._fatal_error_counter))
@@ -57,7 +56,11 @@ class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
                 if value is True and self._fatal_error_counter < 10:
                     while self.get_registration_status()[0] is False:
                         self.clear_buffers()
-                    print(self.send_mms(self._recipient, self._message, None))
+                    if self._img_file_scheme is None:
+                        raise FileNotFoundError
+                    list_of_files = glob.glob(self._img_file_scheme)
+                    newest_file = max(list_of_files, key=os.path.getctime)
+                    print(self.send_mms(self._recipient, self._message, newest_file))
            
     def close(self):
         self.ser.close()
@@ -168,9 +171,9 @@ class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
             return "ERROR\r\n"
 
     def send_mms(self, recipient, message, image_path):
-        print(recipient)
-        print(message)
-        print(image_path)
+        print("Recipient: ", recipient)
+        print("Message: ", message)
+        print("Image: ", image_path)
         print("MMS feature is not avbl on this machine yet")
 
 

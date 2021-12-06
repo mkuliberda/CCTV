@@ -48,10 +48,7 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
             print("resetting buffer")
             sleep(1)
         self.ser.reset_input_buffer()
-        self.ser.reset_output_buffer()
-    
-    def reset_module(self):
-        pass    
+        self.ser.reset_output_buffer()  
 
     def update(self, value):
         print("M590 update, registered:" + str(self.is_registered()) + ", sending sms:" + str(self._is_sending) + ", pir_value:" + str(value) + ", fatal counter: " + str(self._fatal_error_counter))
