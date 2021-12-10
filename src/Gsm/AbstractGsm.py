@@ -9,8 +9,18 @@ class AbstractGsm:
         self._recipient = ""
         self._message = ""
         self._fatal_error_counter = 0
+        self._fatal_error_count_limit = 5
         self._is_sending = False
         self._img_file_scheme = None
+
+    #Context manager methods
+    def __enter__(self):
+        return self
+    
+    @abc.abstractmethod
+    def __exit__(self, exc_type, exc_value, traceback):
+        print("Gsm closing...")
+        self.close()
 
     @abc.abstractmethod
     def open(self, port, baudrate):
@@ -33,6 +43,10 @@ class AbstractGsm:
         self._img_file_scheme = scheme
 
     @abc.abstractmethod
+    def set_fatal_error_count_limit(self, limit):
+        self._fatal_error_count_limit = limit
+    
+    @abc.abstractmethod
     def is_registered(self):
         return self._registered
 
@@ -51,4 +65,8 @@ class AbstractGsm:
 
     @abc.abstractmethod
     def send_mms(self, recipient, message, image_path):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def reset(self, type):
         raise NotImplementedError

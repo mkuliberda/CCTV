@@ -1,16 +1,15 @@
 import serial
 from time import sleep
 from Gsm import AbstractGsm as AbsGsm
-from Observer import observer_abc as AbsObserver
-import glob
-import os
+import RPi.GPIO as GPIO
 
-class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
-    def __init__(self, subject, port, baudrate, rd_buffer_size=31):
-        self._subject = subject
-        self._old_value = False
-        if subject is not None:
-            self._subject.attach(self)
+class SIM800L(AbsGsm.AbstractGsm):
+    def __init__(self, port, baudrate, rst_pin, rd_buffer_size=31):
+        self._name = "SIM800L"
+        self._rst_pin = rst_pin
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self._rst_pin, GPIO.OUT)
+        GPIO.output(self._rst_pin, GPIO.HIGH)
         AbsGsm.AbstractGsm.__init__(self)
         self.open(port, baudrate, rd_buffer_size)
 
@@ -31,36 +30,38 @@ class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
             self.clear_buffers()
         while self.get_module_status() is "Ready":
             sleep(1.0)
-        self._registered = self.get_registration_status()[0]
+        while self._registered is False:
+            [self._registered, state] = self.get_registration_status()
+            print("Registration state is: ", state)
+            sleep(1.0)
+        self._registered = True
         print("started SIM800L")
     
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self._subject is not None:
-            self._subject.detach(self)
-        self.ser.close()
-
     def clear_buffers(self):
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
-        while self.send_command() is False:
-            print("resetting buffer")
+        while self.send_command() is False and self._fatal_error_counter <= self._fatal_error_count_limit:
+            print("resetting buffer, fatal_error_cnt: ", self._fatal_error_counter)
             sleep(2)
+            self._fatal_error_counter += 1
+        if(self._fatal_error_counter > self._fatal_error_count_limit):
+            self.reset(type="HARD")
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()  
 
-    def update(self, value):
-        print("SIM800L update, registered:" + str(self.is_registered()) + ", sending mms:" + str(self._is_sending) + ", pir_value:" + str(value) + ", fatal counter: " + str(self._fatal_error_counter))
-        if value != self._old_value:
-            self._old_value = value
-            if self._is_sending is False:
-                if value is True and self._fatal_error_counter < 10:
-                    while self.get_registration_status()[0] is False:
-                        self.clear_buffers()
-                    if self._img_file_scheme is None:
-                        raise FileNotFoundError
-                    list_of_files = glob.glob(self._img_file_scheme)
-                    newest_file = max(list_of_files, key=os.path.getctime)
-                    print(self.send_mms(self._recipient, self._message, newest_file))
+    # def update(self, value):
+    #     print("SIM800L update, registered:" + str(self.is_registered()) + ", sending mms:" + str(self._is_sending) + ", pir_value:" + str(value) + ", fatal counter: " + str(self._fatal_error_counter))
+    #     if value != self._old_value:
+    #         self._old_value = value
+    #         if self._is_sending is False:
+    #             if value is True and self._fatal_error_counter < 10:
+    #                 while self.get_registration_status()[0] is False:
+    #                     self.clear_buffers()
+    #                 if self._img_file_scheme is None:
+    #                     raise FileNotFoundError
+    #                 list_of_files = glob.glob(self._img_file_scheme)
+    #                 newest_file = max(list_of_files, key=os.path.getctime)
+    #                 print(self.send_mms(self._recipient, self._message, newest_file))
            
     def close(self):
         self.ser.close()
@@ -176,5 +177,15 @@ class SIM800L(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
         print("Image: ", image_path)
         print("MMS feature is not avbl on this machine yet")
 
+    def reset(self, type):
+        if type is "HARD":
+            print("SIM800L hard reset")
+            GPIO.output(self._rst_pin, GPIO.LOW)
+            sleep(0.2)
+            GPIO.output(self._rst_pin, GPIO.HIGH)
+            sleep(10)
+        self._fatal_error_counter = 0
+
+        
 
 

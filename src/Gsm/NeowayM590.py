@@ -1,15 +1,11 @@
 import serial
 from time import sleep
 from Gsm import AbstractGsm as AbsGsm
-from Observer import observer_abc as AbsObserver
 
-class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
-    def __init__(self, subject, port, baudrate, rd_buffer_size=31):
-        self._subject = subject
-        self._old_value = False
+class M590(AbsGsm.AbstractGsm):
+    def __init__(self, port, baudrate, rd_buffer_size=31):
+        self._name = "M590"
         self.open(port, baudrate, rd_buffer_size)
-        if subject is not None:
-            self._subject.attach(self)
         AbsGsm.AbstractGsm.__init__(self)
 
     def open(self, port, baudrate, rd_buffer_size):
@@ -32,11 +28,6 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
         self._registered = self.get_registration_status()[0]
         print("started M590")
     
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self._subject is not None:
-            self._subject.detach(self)
-        self.ser.close()
-
     def clear_buffers(self):
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
@@ -50,15 +41,15 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()  
 
-    def update(self, value):
-        print("M590 update, registered:" + str(self.is_registered()) + ", sending sms:" + str(self._is_sending) + ", pir_value:" + str(value) + ", fatal counter: " + str(self._fatal_error_counter))
-        if value != self._old_value:
-            self._old_value = value
-            if self._is_sending is False:
-                if value is True and self._fatal_error_counter < 10:
-                    while self.get_registration_status()[0] is False:
-                        self.clear_buffers()
-                    print(self.send_sms(self._recipient, self._message))
+    # def update(self, value):
+    #     print("M590 update, registered:" + str(self.is_registered()) + ", sending sms:" + str(self._is_sending) + ", pir_value:" + str(value) + ", fatal counter: " + str(self._fatal_error_counter))
+    #     if value != self._old_value:
+    #         self._old_value = value
+    #         if self._is_sending is False:
+    #             if value is True and self._fatal_error_counter < 10:
+    #                 while self.get_registration_status()[0] is False:
+    #                     self.clear_buffers()
+    #                 print(self.send_sms(self._recipient, self._message))
            
     def close(self):
         self.ser.close()
@@ -165,5 +156,8 @@ class M590(AbsGsm.AbstractGsm, AbsObserver.AbstractObserver):
 
     def send_mms(self, recipient, message, image_path):
         print("MMS feature is not avbl on this machine")
+
+    def reset(self, type):
+        self.send_command("at+cfun=16\r")
 
 
