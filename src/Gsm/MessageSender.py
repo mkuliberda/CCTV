@@ -18,33 +18,36 @@ class MessageSender(AbsObserver.AbstractObserver, AbsSender.AbstractSender):
     def __exit__(self, exc_type, exc_value, traceback):
         if self._subject is not None:
             self._subject.detach(self)
-            
+
+    def find_newest_image_file(self):
+        list_of_files = glob.glob(self._img_file_scheme)
+        return max(list_of_files, key=os.path.getctime)
+
     def update(self, value):
-        print(str(self._gsm_module._name) + \
+        print(str(self._gsm_module.model) + \
             " update, registered:" + \
                 str(self._gsm_module.is_registered()) + \
-                    ", sending:" + str(self._gsm_module._is_sending) + \
+                    ", sending:" + str(self._gsm_module.is_sending) + \
                         ", pir_value:" + str(value) + \
-                            ", fatal counter: " + str(self._gsm_module._fatal_error_counter))
+                            ", fatal counter: " + str(self._gsm_module.fatal_error_counter))
            
         if value != self._old_value:
             self._old_value = value
-            if self._gsm_module._fatal_error_counter > self._gsm_module._fatal_error_count_limit:
+            if self._gsm_module.fatal_error_counter > self._gsm_module._fatal_error_count_limit:
                 self._gsm_module.reset()
-            if self._gsm_module._is_sending is False:
+            if self._gsm_module.is_sending is False:
                 if value is True:
                     while self._gsm_module.get_registration_status()[0] is False:
                         self._gsm_module.clear_buffers()
                     if self._sender_type is "sms":
-                        print(self._gsm_module.send_sms(self._recipient, self._message))
+                        print(self._gsm_module.send_sms(self._recipient, self.find_newest_image_file().split("/")[1].split(".")[0].split("_")[1]))
                     elif self._sender_type is "mms":
                         if self._img_file_scheme is None:
                             raise FileNotFoundError
-                        list_of_files = glob.glob(self._img_file_scheme)
-                        newest_file = max(list_of_files, key=os.path.getctime)
-                        print(self._gsm_module.send_mms(self._recipient, self._message, newest_file))
-
-
+                        newest_file = self.find_newest_image_file()
+                        print(self._gsm_module.send_mms(
+                            self._recipient, newest_file.split("/")[1].split(".")[0].split("_")[1], newest_file))
+    
 
 
 

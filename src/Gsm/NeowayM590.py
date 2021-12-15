@@ -1,17 +1,18 @@
 import serial
 from time import sleep
-from Gsm import AbstractGsm as AbsGsm
+from Gsm import AbstractGsmDevice as AbsGsm
 
-class M590(AbsGsm.AbstractGsm):
+class M590(AbsGsm.AbstractGsmDevice):
     def __init__(self, port, baudrate, rd_buffer_size=31):
-        self._name = "M590"
-        self.open(port, baudrate, rd_buffer_size)
-        AbsGsm.AbstractGsm.__init__(self)
-
-    def open(self, port, baudrate, rd_buffer_size):
-        self.ser = serial.Serial(port, baudrate, timeout=1)
-        sleep(1.0)
+        self.model = "M590"
         self._rd_buffer_size = rd_buffer_size
+        self._baudrate = baudrate
+        AbsGsm.AbstractGsmDevice.__init__(self)
+        self.ser = serial.Serial(port, self._baudrate, timeout=1)
+        self.configure()
+
+    def configure(self):
+        sleep(1.0)
         print("starting M590")
         self.clear_buffers()
         while self.send_command('ATE0\r') is False:
@@ -40,24 +41,14 @@ class M590(AbsGsm.AbstractGsm):
             sleep(1)
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()  
-
-    # def update(self, value):
-    #     print("M590 update, registered:" + str(self.is_registered()) + ", sending sms:" + str(self._is_sending) + ", pir_value:" + str(value) + ", fatal counter: " + str(self._fatal_error_counter))
-    #     if value != self._old_value:
-    #         self._old_value = value
-    #         if self._is_sending is False:
-    #             if value is True and self._fatal_error_counter < 10:
-    #                 while self.get_registration_status()[0] is False:
-    #                     self.clear_buffers()
-    #                 print(self.send_sms(self._recipient, self._message))
-           
+          
     def close(self):
         self.ser.close()
 
     def send_command(self, command='AT\r'):
-        self.ser.write(command.encode())
+        self.ser.write(command.encode(errors="ignore"))
         try:
-            data = self.ser.read(self._rd_buffer_size).decode()
+            data = self.ser.read(self._rd_buffer_size).decode(errors="ignore")
             if "OK" in data:
                 return True
             elif "ERROR" in data:
@@ -66,20 +57,20 @@ class M590(AbsGsm.AbstractGsm):
             elif ">" in data:
                 self.ser.write([26])
                 return False
-            else:
-                print("Error, received ", data, " after command: ", command)
-                return False
+            print("Error, received ", data, " after command: ", command)
+            return False
         except UnicodeDecodeError as e:
             print(e)
             return False
 
     def send_receive(self, cmd='AT\r'):
-        self.ser.write(cmd.encode())
+        self.ser.write(cmd.encode(errors="ignore"))
         return self._read_buffer()
 
     def get_signal_quality(self):
         data = self.send_receive('AT+CSQ\r')
-        if "OK" not in data: return ["ERROR", -1, -1]
+        if "OK" not in data:
+            return ["ERROR", -1, -1]
         data = data.split("\r\n")
         data=data[1].split(",")
         channel_bit_error_rate = int(data[1])
@@ -106,9 +97,8 @@ class M590(AbsGsm.AbstractGsm):
             if data[1] == '5':
                 self._registered = True
                 return [True, "ROAMING"]
-            else: 
-                self._registered = False
-                return [False, "NOT REGISTERED OR UNKNOWN"]
+            self._registered = False
+            return [False, "NOT REGISTERED OR UNKNOWN"]
         except IndexError as e:
             return [False, e]
 
@@ -123,33 +113,33 @@ class M590(AbsGsm.AbstractGsm):
     
     def send_sms(self, recipient="", text="Empty message"):
         if len(recipient) is 0:
-            self._fatal_error_counter+=1
+            self.fatal_error_counter+=1
             raise ValueError("Provide recipient phone number")
-        self._is_sending = True       
+        self.is_sending = True       
         if ">" in self.send_receive('AT+CMGS=\"' + recipient + '\"\r'):
             print("sms sending...")
-            self.ser.write(text.encode())
+            self.ser.write(text.encode(errors="ignore"))
             self.ser.write([26])
             ret = self._read_buffer()
             if "ERROR" in ret:
                 self.clear_buffers()
-                self._fatal_error_counter+=1
+                self.fatal_error_counter+=1
             else:
-                self._fatal_error_counter=0
-            self._is_sending = False
+                self.fatal_error_counter=0
+            self.is_sending = False
             return ret
         else:
             print("sms not sending...")
-            self._fatal_error_counter+=1
+            self.fatal_error_counter+=1
             ret = self._read_buffer()
             self.ser.reset_input_buffer()
             self.ser.reset_output_buffer()
-            self._is_sending = False
+            self.is_sending = False
             return ret
 
     def _read_buffer(self):
         try:
-            return self.ser.read(self._rd_buffer_size).decode()
+            return self.ser.read(self._rd_buffer_size).decode(errors="ignore")
         except UnicodeDecodeError:
             self.ser.reset_input_buffer()
             return "ERROR\r\n"

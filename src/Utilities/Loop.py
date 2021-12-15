@@ -1,6 +1,7 @@
 import sys
 import termios
 import tty
+from time import sleep
 
 
 break_now = False
@@ -31,7 +32,7 @@ def waitForKeyPress():
 def dockerized_run():
     print("Running..")
     while True:
-        pass 
+        sleep(0.1)
 
 def run():
     print("Running.. Hit Ctrl-D to exit")

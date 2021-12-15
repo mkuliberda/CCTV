@@ -10,6 +10,8 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
         self._pin = detector_pin
         self._current_state = False
         self._refresh_rate_seconds = refresh_rate_seconds
+        self._true_state_cnt = 0
+        self._true_state_cnt_action = 3
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self._pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         threading.Thread.__init__(self)
@@ -20,8 +22,12 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
         
     def run(self):
         while self._is_running:
-            self.notify(self.read_pin())
-            print("PIR run")
+            if self.read_pin() is True:
+                self._true_state_cnt += 1
+            else:
+                self._true_state_cnt = 0
+            print("PIR run, value: ", self._true_state_cnt > self._true_state_cnt_action)
+            self.notify(self._true_state_cnt > self._true_state_cnt_action)
             time.sleep(self._refresh_rate_seconds)
 
     def get_state(self):
@@ -32,5 +38,4 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.terminate()
-        self.join()
         self._observers.clear()

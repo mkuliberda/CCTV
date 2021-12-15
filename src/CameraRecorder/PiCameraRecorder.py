@@ -3,7 +3,7 @@ from  picamera import PiCamera
 from Observer import observer_abc as AbsObserver
 from threading import Thread
 from LightingController import *
-from FileUtilities import FileDeleter as FileDeleter
+from FileUtilities import FileDeleter
 
 
 class PiCameraRecorder(AbsObserver.AbstractObserver):
