@@ -50,12 +50,12 @@ if __name__ == '__main__':
     cam1_light_control = GpioLightingController.GpioLightingController(CAM1LIGHT_PIN)
     with PIRSensor.PIRMotionDetector(PIRSENSOR1_PIN, refresh_rate_seconds=1) as pir1thread:
         with PiCam.PiCameraRecorder(cam1_light_control, picture_path="camera/mms", video_path="camera/video0", subject=pir1thread, picture_timestamp=True, video_timestamp=True, rotation=180, timeout=RECORDING_TIME_SECONDS) as cam1, \
-            SIM800L.SIM800L(port=SERIAL0_PORT, baudrate=SERIAL0_BAUDRATE, rst_pin=SIM800L_RST_PIN, pwr_pin=SIM800L_PWR_PIN) as sim800l:
-            with MessageSender.MessageSender(subject=pir1thread, gsm_module=sim800l) as messenger1:
-                messenger1.set_msg_recipient('+48506696574')
-                messenger1.set_img_file_scheme("camera/*.jpg")
-                while not app.shutdown:
-                    app.run()
+            SIM800L.SIM800L(port=SERIAL0_PORT, baudrate=SERIAL0_BAUDRATE, rst_pin=SIM800L_RST_PIN, pwr_pin=SIM800L_PWR_PIN) as sim800l, \
+            MessageSender.MessageSender(subject=pir1thread, gsm_module=sim800l) as messenger1:
+            messenger1.set_msg_recipient('+48506696574')
+            messenger1.set_img_file_scheme("camera/*.jpg")
+            while not app.shutdown:
+                app.run()
         pir1thread.join(RECORDING_TIME_SECONDS)
     
     app.stop()

@@ -34,7 +34,7 @@ class SIM800L(AbsGsm.AbstractGsmDevice):
         while self.send_command('AT+CSCS=\"GSM\"\r') is False:
             print(self.model + ", Error setting character set")
             self.clear_buffers()
-        while self.get_module_status() is "Ready":
+        while self.get_module_status() is not "READY":
             pass
         while self._registered is False:
             [self._registered, state] = self.get_registration_status()
@@ -45,10 +45,10 @@ class SIM800L(AbsGsm.AbstractGsmDevice):
     def clear_buffers(self):
         #self.ser.reset_input_buffer()
         #self.ser.reset_output_buffer()
-        while self.send_command() is False and self.fatal_error_counter <= self._fatal_error_count_limit:
+        while self.send_command() is False and self.fatal_error_counter <= self.fatal_error_count_limit:
             print(self.model + " resetting buffer, fatal_error_cnt: ", self.fatal_error_counter)
             self.fatal_error_counter += 1
-        if self.fatal_error_counter > self._fatal_error_count_limit:
+        if self.fatal_error_counter > self.fatal_error_count_limit:
             self.reset(type="hard")
         #self.ser.reset_input_buffer()
         #self.ser.reset_output_buffer()  
@@ -64,16 +64,13 @@ class SIM800L(AbsGsm.AbstractGsmDevice):
             if "OK" in data:
                 self.fatal_error_counter = 0
                 return True
-            elif "ERROR" in data:
+            if "ERROR" in data:
                 print(self.model + ", Error, received ", data, " after command: ", command)
-                return False
-            elif ">" in data:
+            if ">" in data:
                 self.ser.write([26])
-                return False
-            elif len(data) is 0:
+            if len(data) is 0:
                 self.ser.write("at\r".encode())
                 self.ser.write([26])
-                return False
             return False
         except UnicodeDecodeError as e:
             print(e)
@@ -112,11 +109,11 @@ class SIM800L(AbsGsm.AbstractGsmDevice):
                 self._registered = True
                 self.fatal_error_counter = 0
                 return [True, "LOCAL"]
-            elif data[1] == '2':
+            if data[1] == '2':
                 self.fatal_error_counter = 0
                 self._registered = True
                 return [False, "SEARCHING"]
-            elif data[1] == '5':
+            if data[1] == '5':
                 self.fatal_error_counter = 0
                 self._registered = True
                 return [True, "ROAMING"]
@@ -142,7 +139,7 @@ class SIM800L(AbsGsm.AbstractGsmDevice):
             raise ValueError(self.model + ", Provide recipient phone number")
         self.is_sending = True
         rcv = self.send_receive('AT+CMGS=\"' + recipient + '\"\r')
-        while len(rcv) and error_cnt < 5:
+        while len(rcv) == 0 and error_cnt < 5:
             rcv += self._read_buffer()
             error_cnt += 1
         if ">" in rcv:
@@ -157,7 +154,7 @@ class SIM800L(AbsGsm.AbstractGsmDevice):
                 error_cnt += 1
                 if "ERROR" in ret:
                     self.fatal_error_counter += 1
-                elif "CMGS" in ret:
+                if "CMGS" in ret:
                     self.fatal_error_counter = 0
             self.is_sending = False
             return ret
@@ -181,8 +178,8 @@ class SIM800L(AbsGsm.AbstractGsmDevice):
         print("Image: ", image_path)
         print("MMS feature is not avbl on this machine yet")
 
-    def reset(self, type="hard"):
-        if type is "hard":
+    def reset(self, tpe="hard"):
+        if tpe is "hard":
             print(self.model + ", hard reset")
             GPIO.output(self._pwr_pin, GPIO.HIGH)
             sleep(1)

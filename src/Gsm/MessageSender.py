@@ -33,7 +33,7 @@ class MessageSender(AbsObserver.AbstractObserver, AbsSender.AbstractSender):
            
         if value != self._old_value:
             self._old_value = value
-            if self._gsm_module.fatal_error_counter > self._gsm_module._fatal_error_count_limit:
+            if self._gsm_module.fatal_error_counter > self._gsm_module.fatal_error_count_limit:
                 self._gsm_module.reset()
             if self._gsm_module.is_sending is False:
                 if value is True:

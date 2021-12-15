@@ -8,7 +8,7 @@ class AbstractGsmDevice:
         self._registered = False
         self._recipient = ""
         self._message = ""
-        self._fatal_error_count_limit = 5
+        self.fatal_error_count_limit = 5
         self.fatal_error_counter = 0
         self.error_handler = {
             "decoding": self.handle_decoding_error,
@@ -89,7 +89,7 @@ class AbstractGsmDevice:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def reset(self, type):
+    def reset(self, tpe):
         raise NotImplementedError
     
     @abc.abstractmethod

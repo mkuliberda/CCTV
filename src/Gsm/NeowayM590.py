@@ -51,10 +51,10 @@ class M590(AbsGsm.AbstractGsmDevice):
             data = self.ser.read(self._rd_buffer_size).decode(errors="ignore")
             if "OK" in data:
                 return True
-            elif "ERROR" in data:
+            if "ERROR" in data:
                 print("Error, received", data, " after command: ", command)
                 return False
-            elif ">" in data:
+            if ">" in data:
                 self.ser.write([26])
                 return False
             print("Error, received ", data, " after command: ", command)
@@ -147,7 +147,7 @@ class M590(AbsGsm.AbstractGsmDevice):
     def send_mms(self, recipient, message, image_path):
         print("MMS feature is not avbl on this machine")
 
-    def reset(self, type):
+    def reset(self, tpe):
         self.send_command("at+cfun=16\r")
 
 

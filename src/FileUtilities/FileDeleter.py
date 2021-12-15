@@ -19,6 +19,6 @@ class FileDeleter(AbsFileSanitizer.AbstractFileSanitizer):
             print("Deleting file: ", oldest_file)
             os.remove(oldest_file)
  
-    def get_files_by_type(self, path, type):
-        list_of_files = glob.glob(path + '/*.' + type)
+    def get_files_by_type(self, path, tpe):
+        list_of_files = glob.glob(path + '/*.' + tpe)
         return [list_of_files, len(list_of_files)]
