@@ -2,6 +2,6 @@
 
 # Python CCTV program based on RPi3 (in development). 
 Features:
--SMS/MMS
--video recording
--movement detection
+* SMS/MMS
+* video recording
+* movement detection
