@@ -9,10 +9,7 @@ class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin, GPIO.OUT)
         GPIO.output(self.pin, GPIO.HIGH)
-
-    #def __del__(self):
-    #    GPIO.cleanup()
-      
+     
     def turn_on(self):
         print("light on")
         GPIO.output(self.pin, GPIO.LOW)

@@ -4,10 +4,13 @@ from Observer import observer_abc as AbsObserver
 from threading import Thread
 from LightingController import *
 from FileUtilities import FileDeleter
+from PriorityManager import SimplePriorityManager as PrioMgr
 
 
-class PiCameraRecorder(AbsObserver.AbstractObserver):
-    def __init__(self, AbstractLightControl, subject, datetime_fmt="%y%m%d%H%M%S", video_path="", picture_path="", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
+class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManager):
+    def __init__(self, AbstractLightControl, subject, prio, datetime_fmt="%y%m%d%H%M%S", video_path="", picture_path="", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
+        PrioMgr.SimplePriorityManager.__init__(self)
+        self.set_priority(prio)
         if resolution is None:
             resolution = [1280, 760]
         self._resolution = resolution

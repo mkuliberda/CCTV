@@ -3,10 +3,13 @@ from Observer import observer_abc as AbsObserver
 from Gsm import AbstractSender as AbsSender
 import glob
 import os
+from PriorityManager import SimplePriorityManager as PrioMgr
 
 
-class MessageSender(AbsObserver.AbstractObserver, AbsSender.AbstractSender):
-    def __init__(self, subject, gsm_module, sender_type="sms"):
+class MessageSender(AbsObserver.AbstractObserver, AbsSender.AbstractSender, PrioMgr.SimplePriorityManager):
+    def __init__(self, subject, prio, gsm_module, sender_type="sms"):
+        PrioMgr.SimplePriorityManager.__init__(self)
+        self.set_priority(prio)
         self._gsm_module = gsm_module
         self._subject = subject
         self._sender_type = sender_type
