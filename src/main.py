@@ -8,6 +8,7 @@ from datetime import datetime as dt
 import signal
 import sys
 from time import sleep
+from Utilities import secrets
 
 
 # Pin control
@@ -52,7 +53,7 @@ if __name__ == '__main__':
         with SIM800L.SIM800L(port=SERIAL0_PORT, baudrate=SERIAL0_BAUDRATE, rst_pin=SIM800L_RST_PIN, pwr_pin=SIM800L_PWR_PIN) as sim800l, \
             PiCam.PiCameraRecorder(cam1_light_control, picture_path="camera/mms", video_path="camera/video0", subject=pir1thread, prio = 0, picture_timestamp=True, video_timestamp=True, rotation=180, timeout=RECORDING_TIME_SECONDS) as cam1, \
             MessageSender.MessageSender(subject=pir1thread, prio = 1, gsm_module=sim800l) as messenger1:
-            messenger1.set_msg_recipient('+48506696574')
+            messenger1.set_msg_recipient(secrets.get_phone_nbr()[0])
             messenger1.set_img_file_scheme("camera/*.jpg")
             while not app.shutdown:
                 app.run()

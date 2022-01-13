@@ -3,3 +3,4 @@
 *.h264
 env_config.sh
 __pycache__
+src/Utilities/secrets.py
