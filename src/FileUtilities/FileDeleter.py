@@ -1,8 +1,8 @@
 import glob
-from FileUtilities import AbstractFileSanitizer as AbsFileSanitizer
+from FileUtilities import AbstractCleaner as AbsCleaner
 import os
 
-class FileDeleter(AbsFileSanitizer.AbstractFileSanitizer):
+class FileDeleter(AbsCleaner.AbstractCleaner):
     def __init__(self, file_type, files_limit=100, path=""):
         self._files_limit = files_limit
         self._file_type = file_type

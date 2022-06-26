@@ -4,3 +4,5 @@
 env_config.sh
 __pycache__
 src/Utilities/secrets.py
+src/bearer_and_perm_tokens.json
+src/device_verif.json

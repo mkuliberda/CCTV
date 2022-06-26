@@ -3,3 +3,5 @@ picamera
 RPi.GPIO
 utils
 pyserial
+pyjson
+pycurl

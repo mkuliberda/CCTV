@@ -6,19 +6,21 @@ from LightingController import *
 from FileUtilities import FileDeleter
 from PriorityManager import SimplePriorityManager as PrioMgr
 
+RECORDING_DATETIME_FMT = "%y%m%d%H%M%S"
+
 
 class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManager):
-    def __init__(self, AbstractLightControl, subject, prio, datetime_fmt="%y%m%d%H%M%S", video_path="", picture_path="", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
+    def __init__(self, AbstractLightControl, subject, prio, datetime_fmt=RECORDING_DATETIME_FMT, video_scheme="", picture_scheme="", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
         PrioMgr.SimplePriorityManager.__init__(self)
         self.set_priority(prio)
         if resolution is None:
-            resolution = [1280, 760]
+            resolution = (1280, 760)
         self._resolution = resolution
         self._framerate = framerate
         self._framerate_range = framerate_range
         self._rotation = rotation
-        self._video_path = video_path
-        self._picture_path = picture_path
+        self._video_scheme = video_scheme
+        self._picture_scheme = picture_scheme
         self._video_timestamp = video_timestamp
         self._picture_timestamp = picture_timestamp
         self._timeout = timeout
@@ -51,15 +53,15 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
 
             self._lgt_ctrl.turn_on()
             if self._picture_timestamp is True:
-                camera.capture(self._picture_path + '_' + now_str + '.jpg')
+                camera.capture(self._picture_scheme + '_' + now_str + '.jpg')
             else:
-                camera.capture(self._picture_path + '.jpg')
+                camera.capture(self._picture_scheme + '.jpg')
 
             print("recording started...")
             if self._video_timestamp is True:
-                camera.start_recording(self._video_path + '_' + now_str + '.h264')
+                camera.start_recording(self._video_scheme + '_' + now_str + '.h264')
             else:
-                camera.start_recording(self._video_path + '.h264')
+                camera.start_recording(self._video_scheme + '.h264')
             camera.wait_recording(self._timeout)
             camera.stop_recording()
             print("recording stopped")

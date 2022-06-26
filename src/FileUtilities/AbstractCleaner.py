@@ -1,7 +1,7 @@
 import abc
 
 
-class AbstractFileSanitizer:
+class AbstractCleaner:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
