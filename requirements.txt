@@ -1,7 +1,7 @@
-ffmpeg-python
 picamera
 RPi.GPIO
 utils
 pyserial
 pyjson
 pycurl
+zip-files
