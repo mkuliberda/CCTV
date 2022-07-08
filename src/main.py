@@ -55,7 +55,7 @@ if __name__ == '__main__':
     app.start()
     cam1_light_control = GpioLightingController.GpioLightingController(CAM1LIGHT_PIN)
     with PIRSensor.PIRMotionDetector(PIRSENSOR1_PIN, refresh_rate_seconds=0.5) as pir1thread:
-        with PiCam.PiCameraRecorder(cam1_light_control, picture_scheme="../camera/mms", video_scheme="../camera/video0", subject=pir1thread, prio = 0, picture_timestamp=True, video_timestamp=True, rotation=180, framerate=25, resolution=(640, 480), timeout=RECORDING_TIME_SECONDS) as cam1, \
+        with PiCam.PiCameraRecorder(files_path="../camera/", lgt_ctrl=cam1_light_control, picture_prefix=None, video_prefix="video0_", subject=pir1thread, prio = 0, picture_timestamp=True, video_timestamp=True, rotation=180, framerate=25, resolution=(640, 480), timeout=RECORDING_TIME_SECONDS) as cam1, \
         GDriveZipUploader.GoogleDriveZipUploader(curl_like_object = curl, file_selector=file_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, prio=1, interface="eth0", verbose=True, subject=pir1thread) as file_uploader:
             while not app.shutdown:
                 app.run()

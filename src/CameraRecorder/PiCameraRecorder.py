@@ -11,7 +11,7 @@ RECORDING_DATETIME_FMT = "%y%m%d%H%M%S"
 
 
 class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManager):
-    def __init__(self, AbstractLightControl, subject, prio, datetime_fmt=RECORDING_DATETIME_FMT, video_scheme="", picture_scheme="", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
+    def __init__(self, lgt_ctrl, subject, prio, files_path="", datetime_fmt=RECORDING_DATETIME_FMT, video_prefix=None, video_ext="h264", picture_prefix=None, picture_ext="jpg", picture_timestamp=False, video_timestamp=True, timeout=10, resolution=None, framerate=20, framerate_range=None, rotation=0):
         PrioMgr.SimplePriorityManager.__init__(self)
         self.set_priority(prio)
         if resolution is None:
@@ -20,15 +20,18 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
         self._framerate = framerate
         self._framerate_range = framerate_range
         self._rotation = rotation
-        self._video_scheme = video_scheme
-        self._picture_scheme = picture_scheme
+        self._video_prefix = video_prefix
+        self._video_ext = video_ext
+        self._picture_prefix = picture_prefix
+        self._picture_ext = picture_ext
         self._video_timestamp = video_timestamp
         self._picture_timestamp = picture_timestamp
         self._timeout = timeout
         self._is_recording = False
-        self._lgt_ctrl = AbstractLightControl
+        self._lgt_ctrl = lgt_ctrl
         self._subject = subject
         self._datetime_fmt = datetime_fmt
+        self._files_path = files_path
         self._subject.attach(self)
         
     def update(self, value):
@@ -48,35 +51,41 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
             camera.resolution = self._resolution
             camera.color_effects = [128, 128]
             
-            with FileDeleter.FileDeleter("h264", path="../camera", files_limit=30) as video_cleaner,\
-                 FileDeleter.FileDeleter("jpg", path="../camera", files_limit=50) as jpg_cleaner,\
-                 FileDeleter.FileDeleter("zip", path="../camera", files_limit=50) as zip_cleaner:
+            with FileDeleter.FileDeleter(self._video_ext, path=self._files_path, files_limit=30) as video_cleaner,\
+                 FileDeleter.FileDeleter(self._picture_ext, path=self._files_path, files_limit=50) as img_cleaner,\
+                 FileDeleter.FileDeleter("zip", path=self._files_path, files_limit=50) as zip_cleaner:
                 video_cleaner.run()
-                jpg_cleaner.run()
+                img_cleaner.run()
                 zip_cleaner.run()
 
             self._lgt_ctrl.turn_on()
-            if self._picture_timestamp is True:
-                image_file_relative = self._picture_scheme + '_' + now_str + '.jpg'
-            else:
-                image_file_relative = self._picture_scheme + '.jpg'
-            camera.capture(image_file_relative)
 
-            print("recording started...")
-            if self._video_timestamp is True:
-                video_file_relative = self._video_scheme + '_' + now_str + '.h264'
-            else:
-                video_file_relative = self._video_scheme + '.h264'
-            camera.start_recording(video_file_relative)
-            camera.wait_recording(self._timeout)
-            camera.stop_recording()
-            print("recording stopped")
-            
-            try:
-                with ZipFile(video_file_relative + '.zip', 'w') as zip_obj:
-                    zip_obj.write(video_file_relative)
-            except FileNotFoundError:
-                print("Nothing to zip at this time")
+            if self._picture_prefix is not None:
+                if self._picture_timestamp is True:
+                    image_file_relative = self._files_path + self._picture_prefix + now_str + '.' + self._picture_ext
+                else:
+                    image_file_relative = self._files_path + self._picture_prefix + '.' + self._picture_ext
+                camera.capture(image_file_relative)
+
+            if self._video_prefix is not None:
+                print("recording started...")
+                if self._video_timestamp is True:
+                    video_file_relative = self._files_path + self._video_prefix + now_str + '.'  + self._video_ext
+                else:
+                    video_file_relative = self._files_path + self._video_prefix + '.' + self._video_ext
+                camera.start_recording(video_file_relative)
+                camera.wait_recording(self._timeout)
+                camera.stop_recording()
+                print("recording stopped")
+                self._is_recording = False
 
             self._lgt_ctrl.turn_off()
-            self._is_recording = False
+
+            
+            #try:
+            #    with ZipFile(video_file_relative + '.zip', 'w') as zip_obj:
+            #        zip_obj.write(video_file_relative)
+            #except FileNotFoundError:
+            #    print("Nothing to zip at this time")
+
+
