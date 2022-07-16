@@ -72,8 +72,6 @@ class FaceImageExtractorProcess(Process):
                     move(video_file, self._move_to_path + video_file.split("/")[-1])
                 self._is_analyzing = False
                 break
-            except:
-                print("General exception occured")
         cap.release()
 
 
