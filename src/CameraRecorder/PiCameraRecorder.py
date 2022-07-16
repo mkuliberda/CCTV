@@ -5,7 +5,8 @@ from threading import Thread
 from LightingController import *
 from FileUtilities import FileDeleter
 from PriorityManager import SimplePriorityManager as PrioMgr
-from zipfile import ZipFile
+import subprocess
+from os import remove
 
 RECORDING_DATETIME_FMT = "%y%m%d%H%M%S"
 
@@ -49,14 +50,14 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
             camera.rotation = self._rotation
             camera.framerate = self._framerate/1
             camera.resolution = self._resolution
-            camera.color_effects = [128, 128]
+            #camera.color_effects = [128, 128]
             
-            with FileDeleter.FileDeleter(self._video_ext, path=self._files_path, files_limit=30) as video_cleaner,\
-                 FileDeleter.FileDeleter(self._picture_ext, path=self._files_path, files_limit=50) as img_cleaner,\
-                 FileDeleter.FileDeleter("zip", path=self._files_path, files_limit=50) as zip_cleaner:
-                video_cleaner.run()
-                img_cleaner.run()
-                zip_cleaner.run()
+            #with FileDeleter.FileDeleter(self._video_ext, path=self._files_path, files_limit=30) as raw_video_cleaner,\
+            #     FileDeleter.FileDeleter(self._picture_ext, path=self._files_path, files_limit=50) as img_cleaner,\
+            #     FileDeleter.FileDeleter("zip", path=self._files_path, files_limit=50) as zip_cleaner:
+            #    raw_video_cleaner.run()
+            #    img_cleaner.run()
+            #    zip_cleaner.run()
 
             self._lgt_ctrl.turn_on()
 
@@ -70,22 +71,17 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
             if self._video_prefix is not None:
                 print("recording started...")
                 if self._video_timestamp is True:
-                    video_file_relative = self._files_path + self._video_prefix + now_str + '.'  + self._video_ext
+                    video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps" + now_str
                 else:
-                    video_file_relative = self._files_path + self._video_prefix + '.' + self._video_ext
-                camera.start_recording(video_file_relative)
+                    video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps"
+                video_file_relative_with_ext = video_file_relative + "." + self._video_ext
+                camera.start_recording(video_file_relative + "." + self._video_ext)
                 camera.wait_recording(self._timeout)
                 camera.stop_recording()
-                print("recording stopped")
+                print("recording stopped, converting to mp4...")
+                subprocess.call(["ffmpeg -i " + video_file_relative_with_ext + " -filter:v fps=" + str(self._framerate) + " " + video_file_relative + ".mp4"], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+                remove(video_file_relative_with_ext)
                 self._is_recording = False
+                print("recording: {} ready".format(video_file_relative_with_ext))
 
             self._lgt_ctrl.turn_off()
-
-            
-            #try:
-            #    with ZipFile(video_file_relative + '.zip', 'w') as zip_obj:
-            #        zip_obj.write(video_file_relative)
-            #except FileNotFoundError:
-            #    print("Nothing to zip at this time")
-
-

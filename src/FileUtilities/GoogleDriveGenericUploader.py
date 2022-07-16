@@ -29,6 +29,8 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
         self.client_secret = secrets.get_gdrive_client_secret()
         self.device_verif = None
         self.access_token = None
+        self._upload_limit = -1
+        self._upload_count = 0
         self.set_interface(interface)
         self.set_verbose_mode(verbose)
 
@@ -60,6 +62,10 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
         if self._verbose != verbose:
             self._verbose = verbose
             self._curl.setopt(self._curl.VERBOSE, self._verbose)
+
+
+    def set_upload_limit(self, upload_limit):
+        self._upload_limit = upload_limit
 
 
     def temporary_settings_enter(self, verbose, interface):
