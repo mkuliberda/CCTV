@@ -3,10 +3,9 @@ from picamera import PiCamera
 from Observer import observer_abc as AbsObserver
 from threading import Thread
 from LightingController import *
-from FileUtilities import FileDeleter
 from PriorityManager import SimplePriorityManager as PrioMgr
-import subprocess
-from os import remove
+import logging
+
 
 RECORDING_DATETIME_FMT = "%y%m%d%H%M%S"
 
@@ -51,13 +50,6 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
             camera.framerate = self._framerate/1
             camera.resolution = self._resolution
             #camera.color_effects = [128, 128]
-            
-            #with FileDeleter.FileDeleter(self._video_ext, path=self._files_path, files_limit=30) as raw_video_cleaner,\
-            #     FileDeleter.FileDeleter(self._picture_ext, path=self._files_path, files_limit=50) as img_cleaner,\
-            #     FileDeleter.FileDeleter("zip", path=self._files_path, files_limit=50) as zip_cleaner:
-            #    raw_video_cleaner.run()
-            #    img_cleaner.run()
-            #    zip_cleaner.run()
 
             self._lgt_ctrl.turn_on()
 
@@ -69,19 +61,18 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
                 camera.capture(image_file_relative)
 
             if self._video_prefix is not None:
-                print("recording started...")
+                logging.info("recording...")
+                print("recording...")
                 if self._video_timestamp is True:
                     video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps" + now_str
                 else:
                     video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps"
                 video_file_relative_with_ext = video_file_relative + "." + self._video_ext
-                camera.start_recording(video_file_relative + "." + self._video_ext)
+                camera.start_recording(video_file_relative_with_ext)
                 camera.wait_recording(self._timeout)
                 camera.stop_recording()
-                print("recording stopped, converting to mp4...")
-                subprocess.call(["ffmpeg -i " + video_file_relative_with_ext + " -filter:v fps=" + str(self._framerate) + " " + video_file_relative + ".mp4"], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-                remove(video_file_relative_with_ext)
+                print("recording stop")
+                logging.info("recording stop")
                 self._is_recording = False
-                print("recording: {} ready".format(video_file_relative_with_ext))
 
             self._lgt_ctrl.turn_off()

@@ -12,7 +12,7 @@ class LatestFileSelector(AbsSelector.AbstractSelector):
 
     def get_file_relative_path(self):
         try:
-            list_of_files = glob.glob(self._workdir + '/*.' + self._file_extension)
+            list_of_files = glob.glob(self._workdir + '*.' + self._file_extension)
             return max(list_of_files, key=os.path.getctime)
         except ValueError:
             return None

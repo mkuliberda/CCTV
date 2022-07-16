@@ -2,6 +2,7 @@ import threading
 import RPi.GPIO as GPIO
 from Observer import subject_abc as AbsSub
 import time
+import logging
 
 
 class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):

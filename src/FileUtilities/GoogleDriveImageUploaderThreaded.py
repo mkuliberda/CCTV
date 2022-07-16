@@ -5,6 +5,7 @@ import json
 from threading import Thread
 import time
 from shutil import move
+import logging
 
 
 class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGenericUploader, Thread):
@@ -33,7 +34,7 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
 
     def run(self):
         while self._is_running is True:
-            print("GDrive run, upload count: {}".format(self._upload_count))
+            print("GDrive run, uploading: {}, upload count: {}".format(self._is_uploading, self._upload_count))
             if self._is_uploading is not True:
                 try:
                     if datetime.now() >= self.access_token["exp_datetime"]:
@@ -79,7 +80,9 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
             post_message = [ ('metadata', metadata), ('file', filedata),]
             self._curl.setopt(self._curl.HTTPPOST, post_message)
             self._is_uploading = True
+            logging.info("file upload start...")
             print(self._curl.perform_rs()) #perform_rs()
+            logging.info("file upload complete...")
             #TODO: check success or fail print(self._curl.perform_rs())
             self._upload_count += 1 #TODO: check success and then increase count
             self._is_uploading = False

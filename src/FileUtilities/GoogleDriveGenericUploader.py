@@ -44,6 +44,10 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
             self._subject.detach(self)
         self._curl.close()
 
+    
+    def get_uploading_state(self):
+        return self._is_uploading
+
 
     def update(self, value):
         raise NotImplementedError
