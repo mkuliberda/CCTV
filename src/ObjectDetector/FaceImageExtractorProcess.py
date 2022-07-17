@@ -53,7 +53,6 @@ class FaceImageExtractorProcess(Process):
                     try:
                         # Grab a single frame of video
                         ret, frame = cap.read()
-                        print("Extractor read frame: {}, {}".format(ret,frame))
                         if ret is True:
                             self._blank_frame_counter=0
                         # Convert the image from BGR color (which OpenCV uses) to RGB   
