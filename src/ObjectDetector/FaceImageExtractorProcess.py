@@ -17,6 +17,7 @@ class FaceImageExtractorProcess(Process):
         self._prev_file = None
         self._move_to_path = move_to_path
         self._is_analyzing = False
+        self._blank_frame_counter = 0
         Process.__init__(self)
         self.start()
 
@@ -41,38 +42,47 @@ class FaceImageExtractorProcess(Process):
 
 
     def extract_from_video(self, video_file):
-        # Open video file
-        cap = cv2.VideoCapture(video_file)
-        face_locations = []
-        self._is_analyzing = True
-        while True:
+        if video_file is not None:
             try:
-                # Grab a single frame of video
-                ret, frame = cap.read()
-                # Convert the image from BGR color (which OpenCV uses) to RGB   
-                # color (which face_recognition uses)
-                rgb_frame = frame[:, :, ::-1]
-                # Find all the faces in the current frame of video
-                face_locations = face_recognition.face_locations(rgb_frame, number_of_times_to_upsample=0, model="cnn")
-                faces_found_cnt = len(face_locations)
-                print("found {} face(s) in this photograph.".format(faces_found_cnt))
-                if faces_found_cnt > 0:
-                    filename = self._file_selector.get_workdir() + "/face_" + video_file.split("/")[-1].split(".")[0] + '.jpg'
-                    logging.info("found face, saving to {}...".format(filename))
-                    cv2.imwrite(filename, frame)
-                    if self._move_to_path is not None:
-                        logging.info("moving file {}, to {}".format(video_file, self._move_to_path + video_file.split("/")[-1]))
-                        move(video_file, self._move_to_path + video_file.split("/")[-1])
-                    self._is_analyzing = False
-                    break
-            except TypeError as e:
+                # Open video file
+                cap = cv2.VideoCapture(video_file)
+                face_locations = []
+                self._is_analyzing = True
+                self._blank_frame_counter=0
+                while True:
+                    try:
+                        # Grab a single frame of video
+                        ret, frame = cap.read()
+                        print("Extractor read frame: {}, {}".format(ret,frame))
+                        if ret is True:
+                            self._blank_frame_counter=0
+                        # Convert the image from BGR color (which OpenCV uses) to RGB   
+                        # color (which face_recognition uses)
+                        rgb_frame = frame[:, :, ::-1]
+                        # Find all the faces in the current frame of video
+                        face_locations = face_recognition.face_locations(rgb_frame, number_of_times_to_upsample=0, model="cnn")
+                        faces_found_cnt = len(face_locations)
+                        print("found {} face(s) in this photograph.".format(faces_found_cnt))
+                        if faces_found_cnt > 0:
+                            filename = self._file_selector.get_workdir() + "/face_" + video_file.split("/")[-1].split(".")[0] + '.jpg'
+                            logging.info("found face, saving to {}...".format(filename))
+                            cv2.imwrite(filename, frame)
+                            if self._move_to_path is not None:
+                                logging.info("moving file {} to {}".format(video_file, self._move_to_path + video_file.split("/")[-1]))
+                                move(video_file, self._move_to_path + video_file.split("/")[-1])
+                            break
+                    except TypeError as e:
+                        logging.error(e)
+                        self._blank_frame_counter+=1
+                        if self._blank_frame_counter > 10:
+                            if self._move_to_path is not None:
+                                logging.info("moving file {} to {}".format(video_file, self._move_to_path + video_file.split("/")[-1]))
+                                move(video_file, self._move_to_path + video_file.split("/")[-1])
+                            break
+            except FileNotFoundError as e:
                 logging.error(e)
-                if self._move_to_path is not None:
-                    logging.info("moving file {}, to {}".format(video_file, self._move_to_path + video_file.split("/")[-1]))
-                    move(video_file, self._move_to_path + video_file.split("/")[-1])
-                self._is_analyzing = False
-                break
-        cap.release()
+            self._is_analyzing = False
+            cap.release()
 
 
     #Context manager methods

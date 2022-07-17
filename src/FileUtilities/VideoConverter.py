@@ -1,5 +1,6 @@
 import subprocess
 from os import remove
+import logging
 
 
 class VideoConverterffmpeg():
@@ -10,9 +11,15 @@ class VideoConverterffmpeg():
 
 
     def convert(self, file_to_convert):
-        print("converting{} to {}...".format(file_to_convert, self._target_format))
-        new_file = file_to_convert.replace("h264","mp4")#split("/")[-1].split(".")[0] + ".mp4"
-        subprocess.call(["ffmpeg -i " + file_to_convert + " -filter:v fps=" + str(self._src_framerate) + " " + new_file], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
-        if self._rm_src_file:
-            remove(file_to_convert)
-        return new_file
+        try:
+            print("converting{} to {}...".format(file_to_convert, self._target_format))
+            new_file = file_to_convert.replace("h264","mp4")
+            subprocess.call(["ffmpeg -i " + file_to_convert + " -filter:v fps=" + str(self._src_framerate) + " " + new_file], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+            if self._rm_src_file:
+                remove(file_to_convert)
+            print("converter:{}".format(new_file))
+            return new_file
+        except FileNotFoundError as e:
+            logging.error(e)
+            return None
+            

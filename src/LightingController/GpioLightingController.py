@@ -8,19 +8,19 @@ class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
         self._is_running = False
         self.pin = light_pin
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.pin, GPIO.OUT)
-        GPIO.output(self.pin, GPIO.HIGH)
+        #GPIO.setup(self.pin, GPIO.OUT)
+        #GPIO.output(self.pin, GPIO.HIGH)
      
     def turn_on(self):
         print("light on")
         logging.info("light on")
-        GPIO.output(self.pin, GPIO.LOW)
+        #GPIO.output(self.pin, GPIO.LOW)
         self._is_running = True
         
     def turn_off(self):
         print("light off")
         logging.info("light off")
-        GPIO.output(self.pin, GPIO.HIGH)
+        #GPIO.output(self.pin, GPIO.HIGH)
         self._is_running = False
         
     def get_state(self):

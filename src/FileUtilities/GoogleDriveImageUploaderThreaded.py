@@ -6,6 +6,7 @@ from threading import Thread
 import time
 from shutil import move
 import logging
+import pycurl
 
 
 class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGenericUploader, Thread):
@@ -47,8 +48,6 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
                     print("GDrive update, image: {} uploading...".format(current_image))
                     self.upload_image(current_image, secrets.get_gdrive_folder_id())
                     self._prev_image = current_image
-                    if self._move_to_path is not None:
-                        move(current_image, self._move_to_path + current_image.split("/")[-1])
             time.sleep(self._refresh_rate_seconds)
 
     
@@ -66,27 +65,31 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
 
     def upload_image(self, file_path, gdrive_folder_id=None, verbose=False, interface=None):
         if self._upload_count <= self._upload_limit or self._upload_limit < 0:
-            self.temporary_settings_enter(verbose, interface)
+            try:
+                self.temporary_settings_enter(verbose, interface)
 
-            self._curl.setopt(self._curl.URL, "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
-            self._curl.setopt(self._curl.FOLLOWLOCATION, True)
-            self._curl.setopt(self._curl.HTTPHEADER, ["Authorization: Bearer " + self.access_token["access_token"]])
-            filedata = (self._curl.FORM_FILE, file_path,  self._curl.FORM_CONTENTTYPE, 'image/jpeg',)
-            if gdrive_folder_id is not None:
-                meta = {"name": file_path.split("/")[-1], "parents": [gdrive_folder_id]}
-            else:
-                meta = {"name": file_path.split("/")[-1]}
-            metadata = (self._curl.FORM_CONTENTS, json.dumps(meta), self._curl.FORM_CONTENTTYPE, 'application/json')
-            post_message = [ ('metadata', metadata), ('file', filedata),]
-            self._curl.setopt(self._curl.HTTPPOST, post_message)
-            self._is_uploading = True
-            logging.info("file upload start...")
-            print(self._curl.perform_rs()) #perform_rs()
-            logging.info("file upload complete...")
-            #TODO: check success or fail print(self._curl.perform_rs())
-            self._upload_count += 1 #TODO: check success and then increase count
-            self._is_uploading = False
-            self.temporary_settings_exit(verbose, interface)
+                self._curl.setopt(self._curl.URL, "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
+                self._curl.setopt(self._curl.FOLLOWLOCATION, True)
+                self._curl.setopt(self._curl.HTTPHEADER, ["Authorization: Bearer " + self.access_token["access_token"]])
+                filedata = (self._curl.FORM_FILE, file_path,  self._curl.FORM_CONTENTTYPE, 'image/jpeg',)
+                if gdrive_folder_id is not None:
+                    meta = {"name": file_path.split("/")[-1], "parents": [gdrive_folder_id]}
+                else:
+                    meta = {"name": file_path.split("/")[-1]}
+                metadata = (self._curl.FORM_CONTENTS, json.dumps(meta), self._curl.FORM_CONTENTTYPE, 'application/json')
+                post_message = [ ('metadata', metadata), ('file', filedata),]
+                self._curl.setopt(self._curl.HTTPPOST, post_message)
 
-        return
+                logging.info("file upload start...")
+                self._is_uploading = True
+                self._curl.perform() #perform_rs()
+                logging.info("file upload complete...")
+                if self._move_to_path is not None:
+                    move(file_path, self._move_to_path + file_path.split("/")[-1])
+                self._upload_count += 1
+            except (self._curl.error, FileNotFoundError) as e: #TODO: handle network errors
+                logging.error(e)
+            finally:
+                self._is_uploading = False
+                self.temporary_settings_exit(verbose, interface)
 

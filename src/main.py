@@ -9,7 +9,7 @@ import sys
 import os
 from time import sleep#, perf_counter
 from Utilities import secrets
-from FileUtilities import GoogleDriveImageUploaderThreaded as GDriveImageUploader, LatestFileSelector, FileDeleterProcess, VideoConverter
+from FileUtilities import GoogleDriveImageUploaderThreaded as GDriveImageUploader, LatestFileSelector, FileDeleter, VideoConverter
 import pycurl
 from ObjectDetector import FaceImageExtractorProcess as FaceExtractor
 import logging
@@ -59,14 +59,15 @@ if __name__ == '__main__':
     #img_uploader_first_config.first_run(GDRIVE_DEV_VERIF_FILE, GDRIVE_BEAR_AND_TOKENS_FILE)
     #del img_uploader_first_config
 
+#TODO: guard all move/remove with try, FIleNotFoundError exceptions
 
     app = App()
     app.start()
     cam1_light_control = GpioLightingController.GpioLightingController(CAM1LIGHT_PIN)
     with FaceExtractor.FaceImageExtractorProcess(file_selector=h264_selector, move_to_path="../camera/analyzed/", file_converter=video_converter_mp4) as face_extractor_process, \
         GDriveImageUploader.GoogleDriveImageUploaderThreaded(curl_like_object = curl, file_selector=jpg_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, prio=1, interface="eth0", verbose=True, move_to_path="../camera/uploaded/") as file_uploader_thread, \
-        FileDeleterProcess.FileDeleterProcess(file_type="mp4", files_limit=20, path="../camera/analyzed/") as mp4_cleaner, \
-        FileDeleterProcess.FileDeleterProcess(file_type="jpg", files_limit=20, path="../camera/uploaded/") as jpg_cleaner:
+        FileDeleter.FileDeleterThreaded(file_type="mp4", files_limit=20, path="../camera/analyzed/") as mp4_cleaner, \
+        FileDeleter.FileDeleterThreaded(file_type="jpg", files_limit=20, path="../camera/uploaded/") as jpg_cleaner:
         with PIRSensor.PIRMotionDetector(PIRSENSOR1_PIN, refresh_rate_seconds=1) as pir1_thread:
             with PiCam.PiCameraRecorder(files_path="../camera/", lgt_ctrl=cam1_light_control, picture_prefix=None, video_prefix="video0_", subject=pir1_thread, prio = 0, picture_timestamp=True, video_timestamp=True, rotation=180, framerate=RECORDING_FRAMERATE, resolution=(640, 480), timeout=RECORDING_TIME_SECONDS) as cam1:
                 while not app.shutdown:
@@ -76,6 +77,8 @@ if __name__ == '__main__':
             file_uploader_thread.join(5*60)
         else:
             file_uploader_thread.join(1)
+        mp4_cleaner.join(5)
+        jpg_cleaner.join(5)
     
     app.stop()
     sys.exit(0)
