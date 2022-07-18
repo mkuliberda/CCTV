@@ -7,14 +7,15 @@ from datetime import datetime as dt
 import signal
 import sys
 import os
-from time import sleep#, perf_counter
+from time import sleep
 from Utilities import secrets
 from FileUtilities import GoogleDriveImageUploaderThreaded as GDriveImageUploader, LatestFileSelector, FileDeleter, VideoConverter
 import pycurl
 from ObjectDetector import FaceImageExtractorProcess2 as FaceExtractor
 import logging
 
-logging.basicConfig(filename='../logs/cctv_main.log', filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+logging.basicConfig(filename='../logs/cctv_{}.log'.format(dt.now().strftime("%y%m%d%H%M%S")), filemode='w', format='%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(message)s', level=logging.INFO)
 logging.info("CCTV starting...")
 
 # Pin control
