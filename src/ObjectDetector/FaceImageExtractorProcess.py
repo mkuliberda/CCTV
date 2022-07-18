@@ -1,9 +1,7 @@
 import face_recognition
 import cv2
-from threading import Thread
 from multiprocessing import Process
 from shutil import move
-from Observer import subject_abc as AbsSub
 import time
 import logging
 
