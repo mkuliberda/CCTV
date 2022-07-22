@@ -35,7 +35,7 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
 
     def run(self):
         while self._is_running is True:
-            print("GDrive run, uploading: {}, upload count: {}".format(self._is_uploading, self._upload_count))
+            print("                   uploading: {}, upload count: {}".format(self._is_uploading, self._upload_count), end='\r')
             if self._is_uploading is not True:
                 try:
                     if datetime.now() >= self.access_token["exp_datetime"]:
@@ -45,7 +45,6 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
 
                 current_image = self._file_selector.get_file_relative_path()
                 if current_image != self._prev_image and current_image is not None:
-                    print("GDrive update, image: {} uploading...".format(current_image))
                     self.upload_image(current_image, secrets.get_gdrive_folder_id())
                     self._prev_image = current_image
             time.sleep(self._refresh_rate_seconds)
@@ -80,10 +79,11 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
                 post_message = [ ('metadata', metadata), ('file', filedata),]
                 self._curl.setopt(self._curl.HTTPPOST, post_message)
 
-                logging.info("file upload start...")
+                logging.info("{} upload start...".format(file_path))
                 self._is_uploading = True
                 self._curl.perform() #perform_rs()
-                logging.info("file upload complete...")
+                success = True #TODO: check seccess or fail
+                logging.info("{} upload {}".format(file_path, "success" if success is True else "failed"))
                 if self._move_to_path is not None:
                     move(file_path, self._move_to_path + file_path.split("/")[-1])
                 self._upload_count += 1

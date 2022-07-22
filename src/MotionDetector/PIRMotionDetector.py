@@ -27,7 +27,7 @@ class PIRMotionDetector( AbsSub.AbstractSubject, threading.Thread):
                 self._true_state_cnt += 1
             else:
                 self._true_state_cnt = 0
-            print("PIR run, value: ", self._true_state_cnt > self._true_state_cnt_action)
+            print("PIR detection: {}".format("Yes" if self._true_state_cnt > self._true_state_cnt_action else "No "), end='\r')
             self.notify(self._true_state_cnt > self._true_state_cnt_action)
             time.sleep(self._refresh_rate_seconds)
 

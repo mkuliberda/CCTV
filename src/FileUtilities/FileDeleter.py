@@ -15,11 +15,9 @@ class FileDeleter(AbsCleaner.AbstractCleaner):
         pass
 
     def run(self):
-        #./camera/*.jpg
         while self.get_files_by_type(self._path, self._file_type)[1] > self._files_limit:
-            print("Files limit reached")
             oldest_file = min(self.get_files_by_type(self._path, self._file_type)[0], key=os.path.getctime)
-            print("Deleting file: ", oldest_file)
+            logging.info("Deleting oldest file:{}".format(oldest_file))
             os.remove(oldest_file)
  
     def get_files_by_type(self, path, tpe):

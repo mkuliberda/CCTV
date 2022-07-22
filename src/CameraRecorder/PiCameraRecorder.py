@@ -5,6 +5,7 @@ from threading import Thread
 from LightingController import *
 from PriorityManager import SimplePriorityManager as PrioMgr
 import logging
+from shutil import move
 
 
 RECORDING_DATETIME_FMT = "%y%m%d%H%M%S"
@@ -36,9 +37,10 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
         
     def update(self, value):
         if self._is_recording is False and value is True:
+            self._is_recording = True
             recording_thread = Thread(target=self.record)
             recording_thread.start()
-            self._is_recording = True
+
 
     def __exit__(self, exc_type, exc_value, traceback):
         self._subject.detach(self)
@@ -61,8 +63,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
                 camera.capture(image_file_relative)
 
             if self._video_prefix is not None:
-                logging.info("recording...")
-                print("recording...")
+                logging.info("Recording...")
                 if self._video_timestamp is True:
                     video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps" + now_str
                 else:
@@ -71,8 +72,8 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
                 camera.start_recording(video_file_relative_with_ext)
                 camera.wait_recording(self._timeout)
                 camera.stop_recording()
-                print("recording stop")
-                logging.info("recording stop")
-                self._is_recording = False
+                move(video_file_relative_with_ext, "../camera/recordings/" + video_file_relative_with_ext.split("/")[-1])
+                logging.info("Recording stop")
 
             self._lgt_ctrl.turn_off()
+        self._is_recording = False

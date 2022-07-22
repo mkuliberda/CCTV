@@ -29,13 +29,18 @@ class FaceImageExtractorProcess(Process):
             if self._is_analyzing is False:
                 current_file = self._file_selector.get_file_relative_path()
                 if current_file != self._prev_file and current_file is not None:
-                    print("Face Extractor run on {}".format(current_file))
-                    self.extract_from_video(current_file)
-                    self._prev_file = current_file
-                    if self._file_converter is not None:
-                        converted_file = self._file_converter.convert(current_file)
+                    logging.info("Extracting from {}".format(current_file))
+                    if self.extract_from_video(current_file) is True:
+                        if self._file_converter is not None:
+                            converted_file = self._file_converter.convert(current_file)
+                        else:
+                            converted_file = current_file
+                        if self._move_to_path is not None:
+                            logging.info("Moving file {} to {}".format(converted_file, self._move_to_path + converted_file.split("/")[-1]))
+                            move(converted_file, self._move_to_path + converted_file.split("/")[-1])
                     else:
-                        converted_file = current_file
+                        self._file_converter.convert(current_file)
+                    self._prev_file = current_file
             time.sleep(self._refresh_rate_seconds)
 
 
@@ -61,20 +66,16 @@ class FaceImageExtractorProcess(Process):
                         )
 
                     num_faces = len(faces)
-                    #print("found {} face(s) in this photograph.".format(faces))
                     if num_faces > 0:
                         filename = self._file_selector.get_workdir() + "/face_" + video_file.split("/")[-1].split(".")[0] + '.jpg'
-                        logging.info("found face, saving to {}...".format(filename))
+                        logging.info("Found face, saving to {}...".format(filename))
                         cv2.imwrite(filename, frame)
-                        if self._move_to_path is not None:
-                            logging.info("moving file {} to {}".format(video_file, self._move_to_path + video_file.split("/")[-1]))
-                            move(video_file, self._move_to_path + video_file.split("/")[-1])
                         break
             except FileNotFoundError as e:
                 logging.error(e)
             self._is_analyzing = False
             video_capture.release()
-            return num_faces
+            return num_faces > 0
 
 
     #Context manager methods

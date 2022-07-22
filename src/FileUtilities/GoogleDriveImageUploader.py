@@ -32,7 +32,7 @@ class GoogleDriveImageUploader(GoogleDriveGenericUploader.GoogleDriveGenericUplo
 
             current_image = self._file_selector.get_file_relative_path()
             if current_image != self._prev_image and current_image is not None:
-                print("GDrive update, image: {} uploading...".format(current_image))
+                logging.info("{} uploading...".format(current_image))
                 thread = threading.Thread(target=self.upload_image, args=(current_image, secrets.get_gdrive_folder_id(),))
                 thread.start()
                 self._prev_image = current_image
@@ -54,9 +54,10 @@ class GoogleDriveImageUploader(GoogleDriveGenericUploader.GoogleDriveGenericUplo
         self._curl.setopt(self._curl.HTTPPOST, post_message)
         self._is_uploading = True
         self._curl.perform() #perform_rs()
-        #TODO: check success or fail print(self._curl.perform_rs())
+        success = True #TODO: check success or fail print(self._curl.perform_rs())
+        logging.info("{} upload {}".format(file_path, "success" if success is True else "failed"))
         self._is_uploading = False
         self.temporary_settings_exit(verbose, interface)
 
-        return
+        return success
 

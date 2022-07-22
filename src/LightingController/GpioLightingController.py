@@ -12,14 +12,12 @@ class GpioLightingController(AbsLgtCtrl.AbstractLightControl):
         #GPIO.output(self.pin, GPIO.HIGH)
      
     def turn_on(self):
-        print("light on")
-        logging.info("light on")
+        logging.info("Light on")
         #GPIO.output(self.pin, GPIO.LOW)
         self._is_running = True
         
     def turn_off(self):
-        print("light off")
-        logging.info("light off")
+        logging.info("Light off")
         #GPIO.output(self.pin, GPIO.HIGH)
         self._is_running = False
         
