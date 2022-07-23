@@ -7,7 +7,6 @@ from threading import Thread
 import time
 from shutil import move
 import logging
-import pycurl
 
 
 class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader, Process):
@@ -36,7 +35,7 @@ class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader, Process):
 
     def run(self):
         while self._is_running is True:
-            print("                   uploading: {}, upload count: {}".format(self._is_uploading, self._upload_count), end='\r')
+            print("                   uploading: {}, upload count: {}      ".format(self._is_uploading, self._upload_count), end='\r')
             if self._is_uploading is not True:
                 try:
                     if datetime.now() >= self.access_token["exp_datetime"]:

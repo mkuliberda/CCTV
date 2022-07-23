@@ -1,5 +1,5 @@
 from datetime import datetime as dt
-from picamera import PiCamera
+from picamera import *
 from Observer import observer_abc as AbsObserver
 from threading import Thread
 from LightingController import *
@@ -33,10 +33,11 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
         self._subject = subject
         self._datetime_fmt = datetime_fmt
         self._files_path = files_path
+        self._cam_critical_error = False
         self._subject.attach(self)
         
     def update(self, value):
-        if self._is_recording is False and value is True:
+        if self._is_recording is False and value is True and self._cam_critical_error is False:
             self._is_recording = True
             recording_thread = Thread(target=self.record)
             recording_thread.start()
@@ -46,34 +47,37 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
         self._subject.detach(self)
         
     def record(self):
-        with PiCamera() as camera:
-            now_str = dt.now().strftime(self._datetime_fmt)
-            camera.rotation = self._rotation
-            camera.framerate = self._framerate/1
-            camera.resolution = self._resolution
-            camera.color_effects = [128, 128] #black/white not working with face_recognition
-
+        try:
             self._lgt_ctrl.turn_on()
+            with PiCamera() as camera:
+                now_str = dt.now().strftime(self._datetime_fmt)
+                camera.rotation = self._rotation
+                camera.framerate = self._framerate/1
+                camera.resolution = self._resolution
+                camera.color_effects = [128, 128] #black/white not working with face_recognition
 
-            if self._picture_prefix is not None:
-                if self._picture_timestamp is True:
-                    image_file_relative = self._files_path + self._picture_prefix + now_str + '.' + self._picture_ext
-                else:
-                    image_file_relative = self._files_path + self._picture_prefix + '.' + self._picture_ext
-                camera.capture(image_file_relative)
+                if self._picture_prefix is not None:
+                    if self._picture_timestamp is True:
+                        image_file_relative = self._files_path + self._picture_prefix + now_str + '.' + self._picture_ext
+                    else:
+                        image_file_relative = self._files_path + self._picture_prefix + '.' + self._picture_ext
+                    camera.capture(image_file_relative)
 
-            if self._video_prefix is not None:
-                logging.info("Recording...")
-                if self._video_timestamp is True:
-                    video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps" + now_str
-                else:
-                    video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps"
-                video_file_relative_with_ext = video_file_relative + "." + self._video_ext
-                camera.start_recording(video_file_relative_with_ext)
-                camera.wait_recording(self._timeout)
-                camera.stop_recording()
-                move(video_file_relative_with_ext, "../camera/recordings/" + video_file_relative_with_ext.split("/")[-1])
-                logging.info("Recording stop")
-
+                if self._video_prefix is not None:
+                    logging.info("Recording...")
+                    if self._video_timestamp is True:
+                        video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps" + now_str
+                    else:
+                        video_file_relative = self._files_path + self._video_prefix + str(self._framerate) + "fps"
+                    video_file_relative_with_ext = video_file_relative + "." + self._video_ext
+                    camera.start_recording(video_file_relative_with_ext)
+                    camera.wait_recording(self._timeout)
+                    camera.stop_recording()
+                    move(video_file_relative_with_ext, "../camera/recordings/" + video_file_relative_with_ext.split("/")[-1])
+                    logging.info("Recording stop")
+        except Exception as e: #TODO: can I do anything else about it?
+            logging.error(e)
+            self._cam_critical_error = True
+        finally:
             self._lgt_ctrl.turn_off()
-        self._is_recording = False
+            self._is_recording = False
