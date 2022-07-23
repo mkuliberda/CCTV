@@ -9,7 +9,7 @@ import sys
 import os
 from time import sleep
 from Utilities import secrets
-from FileUtilities import GoogleDriveImageUploaderThreaded as GDriveImageUploader, LatestFileSelector, FileDeleter, VideoConverter
+from FileUtilities import GoogleDriveImageUploaderProcess as GDriveImageUploader, LatestFileSelector, FileDeleter, VideoConverter
 import pycurl
 from ObjectDetector import FaceImageExtractorProcess2 as FaceExtractor
 import logging
@@ -37,7 +37,7 @@ class App:
 
     def exit_gracefully(self, signum, frame):
         print(flush=True)
-        print('Received: {}'.format("shutdown signal, exiting... please wait" if signum==2 else signum))
+        print('Received {}'.format("shutdown signal, exiting... please wait" if signum==2 else signum))
         logging.info("CCTV shutting down...")
         self.shutdown = True
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     app.start()
     cam1_light_control = GpioLightingController.GpioLightingController(CAM1LIGHT_PIN)
     with FaceExtractor.FaceImageExtractorProcess(file_selector=h264_selector, haar_cascade_settings_file="haarcascade_frontalface_default.xml", move_to_path="../camera/recordings/detections/", file_converter=video_converter_mp4) as face_extractor_process, \
-        GDriveImageUploader.GoogleDriveImageUploaderThreaded(curl_like_object = curl, file_selector=jpg_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, prio=1, interface="eth0", verbose=True, move_to_path="../camera/recordings/uploaded/") as file_uploader_thread, \
+        GDriveImageUploader.GoogleDriveImageUploaderProcess(curl_like_object = curl, file_selector=jpg_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, prio=1, interface="ppp0", verbose=True, move_to_path="../camera/recordings/uploaded/") as file_uploader, \
         FileDeleter.FileDeleterThreaded(file_type="mp4", files_limit=1000, path="../camera/recordings/detections/") as detections_cleaner, \
         FileDeleter.FileDeleterThreaded(file_type="mp4", files_limit=100, path="../camera/recordings/") as mp4_cleaner, \
         FileDeleter.FileDeleterThreaded(file_type="jpg", files_limit=1000, path="../camera/recordings/uploaded/") as jpg_cleaner:
@@ -75,10 +75,10 @@ if __name__ == '__main__':
                 while not app.shutdown:
                     app.run()
             pir1_thread.join(RECORDING_TIME_SECONDS)
-        if file_uploader_thread.get_uploading_state():
-            file_uploader_thread.join(5*60)
+        if file_uploader.get_uploading_state():
+            file_uploader.join(5*60)
         else:
-            file_uploader_thread.join(1)
+            file_uploader.join(1)
         detections_cleaner.join(5)
         mp4_cleaner.join(5)
         jpg_cleaner.join(5)

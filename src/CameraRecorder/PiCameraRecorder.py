@@ -51,7 +51,7 @@ class PiCameraRecorder(AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManag
             camera.rotation = self._rotation
             camera.framerate = self._framerate/1
             camera.resolution = self._resolution
-            #camera.color_effects = [128, 128] #black/white not working with face_recognition
+            camera.color_effects = [128, 128] #black/white not working with face_recognition
 
             self._lgt_ctrl.turn_on()
 

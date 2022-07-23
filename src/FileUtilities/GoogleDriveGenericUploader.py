@@ -5,6 +5,7 @@ from Utilities import secrets
 import json
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
+import logging
 
 BEARER_AND_PERM_TOKENS_JSON1 = "bearer_and_perm_tokens1.json"
 DEVICE_VERIF_JSON1 = "device_verif1.json"
@@ -89,8 +90,10 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
 
         self._curl.setopt(self._curl.URL, 'https://oauth2.googleapis.com/device/code')
         self._curl.setopt(self._curl.POSTFIELDS,"client_id=" + secrets.get_gdrive_client_id() + "&scope=https://www.googleapis.com/auth/drive.file")
-        self.device_verif = json.loads(self._curl.perform_rs())
-
+        try:
+            self.device_verif = json.loads(self._curl.perform_rs())
+        except self._curl.error as e:
+            logging.error(e)
         self.temporary_settings_exit(verbose, interface)
         return json.dumps(self.device_verif)
 
@@ -117,8 +120,10 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
         self._curl.setopt(self._curl.POSTFIELDS, postfields)
         print("Authorize device with user_code via https://www.google.com/device and hit enter, user_code is:", json_object['user_code'])
         input()
-        self.access_token = json.loads(self._curl.perform_rs())
-
+        try:
+            self.access_token = json.loads(self._curl.perform_rs())
+        except self._curl.error as e:
+            logging.error(e)
         self.temporary_settings_exit(verbose, interface)
         return json.dumps(self.access_token)
 
@@ -144,8 +149,11 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
             }
         postfields = urlencode(post_data)
         self._curl.setopt(self._curl.POSTFIELDS, postfields)
-        self.access_token = json.loads(self._curl.perform_rs())
-        self.access_token["exp_datetime"] = datetime.now() + timedelta(seconds=self.access_token["expires_in"])
+        try:
+            self.access_token = json.loads(self._curl.perform_rs())
+            self.access_token["exp_datetime"] = datetime.now() + timedelta(seconds=self.access_token["expires_in"])
+        except (self._curl.error, KeyError, AttributeError) as e:
+            logging.error(e)
 
         self.temporary_settings_exit(verbose, interface)
 

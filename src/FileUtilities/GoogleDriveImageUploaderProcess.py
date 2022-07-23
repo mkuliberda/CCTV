@@ -2,14 +2,14 @@ from FileUtilities import GoogleDriveGenericUploader
 from datetime import datetime, timedelta
 from Utilities import secrets
 import json
-from threading import Thread
+from multiprocessing import Process
 import time
 from shutil import move
 import logging
 import pycurl
 
 
-class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGenericUploader, Thread):
+class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader.GoogleDriveGenericUploader, Process):
     def __init__(self, curl_like_object, file_selector, device_verif_filename, bearer_and_perm_tokens_filename, prio, interface=None, verbose=False, subject=None, move_to_path=None):
         GoogleDriveGenericUploader.GoogleDriveGenericUploader.__init__(
             self,
@@ -25,7 +25,7 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
         self._refresh_rate_seconds = 1
         self._prev_image = None
         self._move_to_path = move_to_path
-        Thread.__init__(self)
+        Process.__init__(self)
         self.start()
 
 
@@ -95,4 +95,11 @@ class GoogleDriveImageUploaderThreaded(GoogleDriveGenericUploader.GoogleDriveGen
             finally:
                 self._is_uploading = False
                 self.temporary_settings_exit(verbose, interface)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._subject is not None:
+            self._subject.detach(self)
+        self._curl.close()
+        self.kill()
+
 
