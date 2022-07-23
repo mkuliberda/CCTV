@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from Utilities import secrets
 import json
 from multiprocessing import Process
+from threading import Thread
 import time
 from shutil import move
 import logging
@@ -10,17 +11,17 @@ import pycurl
 
 
 class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader.GoogleDriveGenericUploader, Process):
-    def __init__(self, curl_like_object, file_selector, device_verif_filename, bearer_and_perm_tokens_filename, prio, interface=None, verbose=False, subject=None, move_to_path=None):
+    def __init__(self, curl_like_object, file_selector, device_verif_filename, bearer_and_perm_tokens_filename, interface=None, verbose=False, move_to_path=None):
         GoogleDriveGenericUploader.GoogleDriveGenericUploader.__init__(
             self,
             curl_like_object=curl_like_object,
             file_selector=file_selector,
             device_verif_filename=device_verif_filename,
             bearer_and_perm_tokens_filename=bearer_and_perm_tokens_filename,
-            prio=prio,
+            prio=0,
             interface=interface,
             verbose=verbose,
-            subject=subject)
+            subject=None)
         self._is_running = True
         self._refresh_rate_seconds = 1
         self._prev_image = None
@@ -40,15 +41,17 @@ class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader.GoogleDriveGene
                 try:
                     if datetime.now() >= self.access_token["exp_datetime"]:
                         self.get_new_access_token_from_refresh_token(self._bearer_and_perm_tokens_filename)  #TODO: handle exp time 60minutes, refresh token:7days
-                except (KeyError, TypeError):
-                    self.get_new_access_token_from_refresh_token(self._bearer_and_perm_tokens_filename)
+                except (KeyError, TypeError) as e:
+                    logging.error(e)
+                    self.get_new_access_token_from_refresh_token(self._bearer_and_perm_tokens_filename) #TODO: 
                 except self._curl.error as e:
                     logging.error(e)
 
                 current_image = self._file_selector.get_file_relative_path()
                 if current_image != self._prev_image and current_image is not None:
-                    self.upload_image(current_image, secrets.get_gdrive_folder_id())
+                    uploading_thread = Thread(target=self.upload_image, args=(current_image, secrets.get_gdrive_folder_id()))
                     self._prev_image = current_image
+                    uploading_thread.start()
             time.sleep(self._refresh_rate_seconds)
 
     
@@ -60,13 +63,11 @@ class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader.GoogleDriveGene
         self._refresh_rate_seconds = refresh_rate_seconds
     
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.terminate()
-
-
     def upload_image(self, file_path, gdrive_folder_id=None, verbose=False, interface=None):
         if self._upload_count <= self._upload_limit or self._upload_limit < 0:
             try:
+                self._is_uploading = True
+                logging.info("{} upload start...".format(file_path))
                 self.temporary_settings_enter(verbose, interface)
 
                 self._curl.setopt(self._curl.URL, "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
@@ -81,8 +82,6 @@ class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader.GoogleDriveGene
                 post_message = [ ('metadata', metadata), ('file', filedata),]
                 self._curl.setopt(self._curl.HTTPPOST, post_message)
 
-                logging.info("{} upload start...".format(file_path))
-                self._is_uploading = True
                 success = False
                 if "error" not in self._curl.perform_rs():
                     success = True #TODO: check success or fail
@@ -96,9 +95,9 @@ class GoogleDriveImageUploaderProcess(GoogleDriveGenericUploader.GoogleDriveGene
                 self._is_uploading = False
                 self.temporary_settings_exit(verbose, interface)
 
+
     def __exit__(self, exc_type, exc_value, traceback):
-        if self._subject is not None:
-            self._subject.detach(self)
+        self.terminate()
         self._curl.close()
         self.kill()
 

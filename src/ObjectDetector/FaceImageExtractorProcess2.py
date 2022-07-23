@@ -20,8 +20,8 @@ class FaceImageExtractorProcess(Process):
         self.start()
 
 
-    #def terminate(self):
-    #    self._is_running = False
+    def terminate(self):
+        self._is_running = False
         
 
     def run(self):
@@ -83,5 +83,5 @@ class FaceImageExtractorProcess(Process):
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
-        #self.terminate()
+        self.terminate()
         self.kill()

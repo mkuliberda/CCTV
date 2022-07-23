@@ -66,7 +66,7 @@ if __name__ == '__main__':
     app.start()
     cam1_light_control = GpioLightingController.GpioLightingController(CAM1LIGHT_PIN)
     with FaceExtractor.FaceImageExtractorProcess(file_selector=h264_selector, haar_cascade_settings_file="haarcascade_frontalface_default.xml", move_to_path="../camera/recordings/detections/", file_converter=video_converter_mp4) as face_extractor_process, \
-        GDriveImageUploader.GoogleDriveImageUploaderProcess(curl_like_object = curl, file_selector=jpg_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, prio=1, interface="ppp0", verbose=True, move_to_path="../camera/recordings/uploaded/") as file_uploader, \
+        GDriveImageUploader.GoogleDriveImageUploaderProcess(curl_like_object=curl, file_selector=jpg_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, interface="ppp0", verbose=True, move_to_path="../camera/recordings/uploaded/") as file_uploader, \
         FileDeleter.FileDeleterThreaded(file_type="mp4", files_limit=1000, path="../camera/recordings/detections/") as detections_cleaner, \
         FileDeleter.FileDeleterThreaded(file_type="mp4", files_limit=100, path="../camera/recordings/") as mp4_cleaner, \
         FileDeleter.FileDeleterThreaded(file_type="jpg", files_limit=1000, path="../camera/recordings/uploaded/") as jpg_cleaner:
