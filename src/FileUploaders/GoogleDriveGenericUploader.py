@@ -1,6 +1,6 @@
 from Observer import observer_abc as AbsObserver
 from PriorityManager import SimplePriorityManager as PrioMgr
-from FileUtilities import AbstractUploader as AbsUploader
+from FileUploaders import AbstractUploader as AbsUploader
 from Utilities import secrets
 import json
 from urllib.parse import urlencode

@@ -1,14 +1,14 @@
-from FileUtilities import GoogleDriveGenericUploader
+from FileUploaders.GoogleDriveGenericUploader import GoogleDriveGenericUploader
 from datetime import datetime, timedelta
 from Utilities import secrets
 import json
 import threading
 from zipfile import ZipFile
 
-class GoogleDriveZipUploader(GoogleDriveGenericUploader.GoogleDriveGenericUploader):
+class GoogleDriveZipUploader(GoogleDriveGenericUploader):
     def __init__(self, curl_like_object, file_selector, device_verif_filename,
      bearer_and_perm_tokens_filename, prio, interface=None, verbose=False, subject=None):
-     GoogleDriveGenericUploader.GoogleDriveGenericUploader.__init__(
+     GoogleDriveGenericUploader.__init__(
         self,
         curl_like_object=curl_like_object,
         file_selector=file_selector,

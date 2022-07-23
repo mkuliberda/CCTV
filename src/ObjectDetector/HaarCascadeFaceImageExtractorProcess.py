@@ -5,7 +5,7 @@ import time
 import logging
 
 
-class FaceImageExtractorProcess(Process):
+class HaarCascadeFaceImageExtractorProcess(Process):
     def __init__(self, file_selector, haar_cascade_settings_file, move_to_path=None, refresh_rate_seconds=1, file_converter=None):
         self._is_running = True
         self._refresh_rate_seconds = refresh_rate_seconds
