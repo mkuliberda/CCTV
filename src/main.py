@@ -12,8 +12,7 @@ from Utilities import secrets
 from FileUtilities.LatestFileSelector import LatestFileSelector
 from FileUtilities.FileDeleter import FileDeleterThreaded as FileDeleter
 from FileUtilities.VideoConverter import VideoConverterffmpeg as VideoConverter
-from FileUploaders.GoogleDriveImageUploaderProcess import GoogleDriveImageUploaderProcess as GDriveImageUploader
-import pycurl
+from FileUploaders.GoogleDriveImageCurlUploaderProcess import GoogleDriveImageCurlUploaderProcess as GDriveImageUploader
 from ObjectDetector.HaarCascadeFaceImageExtractorProcess import HaarCascadeFaceImageExtractorProcess as FaceExtractor
 import logging
 
@@ -56,11 +55,10 @@ class App:
 
 if __name__ == '__main__':
 
-    curl = pycurl.Curl()
     jpg_selector = LatestFileSelector("../camera/recordings/", "jpg")
     h264_selector = LatestFileSelector("../camera/recordings/", "h264")
     video_converter_mp4 = VideoConverter(target_format="mp4", src_framerate=RECORDING_FRAMERATE)
-    #img_uploader_first_config = GDriveImgUploader.GoogleDriveImageUploader(curl_like_object = curl, image_selector=None, device_verif_filename="device_verif.json", bearer_and_perm_tokens_filename="bearer_and_perm_tokens.json", prio=1, interface="eth0", verbose=True)
+    #img_uploader_first_config = GDriveImgUploader.GoogleDriveImageCurlUploader(curl_like_object = curl, image_selector=None, device_verif_filename="device_verif.json", bearer_and_perm_tokens_filename="bearer_and_perm_tokens.json", prio=1, interface="eth0", verbose=True)
     #img_uploader_first_config.first_run(GDRIVE_DEV_VERIF_FILE, GDRIVE_BEAR_AND_TOKENS_FILE)
     #del img_uploader_first_config
 
@@ -69,7 +67,7 @@ if __name__ == '__main__':
     app.start()
     cam1_light_control = GpioLightingController(CAM1LIGHT_PIN)
     with FaceExtractor(file_selector=h264_selector, haar_cascade_settings_file="haarcascade_frontalface_default.xml", move_to_path="../camera/recordings/detections/", file_converter=video_converter_mp4) as face_extractor_process, \
-        GDriveImageUploader(curl_like_object=curl, file_selector=jpg_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, interface="ppp0", verbose=True, move_to_path="../camera/recordings/uploaded/") as file_uploader, \
+        GDriveImageUploader(file_selector=jpg_selector, device_verif_filename=GDRIVE_DEV_VERIF_FILE, bearer_and_perm_tokens_filename=GDRIVE_BEAR_AND_TOKENS_FILE, interface="ppp0", verbose=True, move_to_path="../camera/recordings/uploaded/") as file_uploader, \
         FileDeleter(file_type="mp4", files_limit=1000, path="../camera/recordings/detections/") as detections_cleaner, \
         FileDeleter(file_type="mp4", files_limit=100, path="../camera/recordings/") as mp4_cleaner, \
         FileDeleter(file_type="jpg", files_limit=1000, path="../camera/recordings/uploaded/") as jpg_cleaner:

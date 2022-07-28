@@ -1,15 +1,14 @@
-from FileUploaders.GoogleDriveGenericUploader import GoogleDriveGenericUploader
+from FileUploaders.GoogleDriveGenericCurlUploader import GoogleDriveGenericCurlUploader
 from datetime import datetime, timedelta
 from Utilities import secrets
 import json
 import threading
 
-class GoogleDriveImageUploader(GoogleDriveGenericUploader):
-    def __init__(self, curl_like_object, file_selector, device_verif_filename,
+class GoogleDriveImageCurlUploader(GoogleDriveGenericCurlUploader):
+    def __init__(self, file_selector, device_verif_filename,
      bearer_and_perm_tokens_filename, prio, interface=None, verbose=False, subject=None):
-     GoogleDriveGenericUploader.__init__(
+     GoogleDriveGenericCurlUploader.__init__(
         self,
-        curl_like_object=curl_like_object,
         file_selector=file_selector,
         device_verif_filename=device_verif_filename,
         bearer_and_perm_tokens_filename=bearer_and_perm_tokens_filename,

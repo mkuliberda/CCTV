@@ -6,13 +6,11 @@ import json
 from urllib.parse import urlencode
 from datetime import datetime, timedelta
 import logging
-
-BEARER_AND_PERM_TOKENS_JSON1 = "bearer_and_perm_tokens1.json"
-DEVICE_VERIF_JSON1 = "device_verif1.json"
+import pycurl
 
 
-class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManager):
-    def __init__(self, curl_like_object, file_selector, device_verif_filename,
+class GoogleDriveGenericCurlUploader(AbsUploader.AbstractUploader, AbsObserver.AbstractObserver, PrioMgr.SimplePriorityManager):
+    def __init__(self, file_selector, device_verif_filename,
      bearer_and_perm_tokens_filename, prio, interface=None, verbose=False, subject=None):
         PrioMgr.SimplePriorityManager.__init__(self)
         self.set_priority(prio)
@@ -21,7 +19,7 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
         self._bearer_and_perm_tokens_filename = bearer_and_perm_tokens_filename
         self._is_uploading = False
         self._file_selector = file_selector
-        self._curl = curl_like_object
+        self._curl = pycurl.Curl()
         self._perm_interface = None
         self._interface = None
         self._perm_verbose = None
@@ -92,7 +90,7 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
         self._curl.setopt(self._curl.POSTFIELDS,"client_id=" + secrets.get_gdrive_client_id() + "&scope=https://www.googleapis.com/auth/drive.file")
         try:
             self.device_verif = json.loads(self._curl.perform_rs())
-        except self._curl.error as e:
+        except pycurl.error as e:
             logging.error(e)
         self.temporary_settings_exit(verbose, interface)
         return json.dumps(self.device_verif)
@@ -122,7 +120,7 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
         input()
         try:
             self.access_token = json.loads(self._curl.perform_rs())
-        except self._curl.error as e:
+        except pycurl.error as e:
             logging.error(e)
         self.temporary_settings_exit(verbose, interface)
         return json.dumps(self.access_token)
@@ -152,7 +150,7 @@ class GoogleDriveGenericUploader(AbsUploader.AbstractUploader, AbsObserver.Abstr
         try:
             self.access_token = json.loads(self._curl.perform_rs())
             self.access_token["exp_datetime"] = datetime.now() + timedelta(seconds=self.access_token["expires_in"])
-        except (self._curl.error, KeyError, AttributeError) as e:
+        except (pycurl.error, KeyError) as e:
             logging.error(e)
 
         self.temporary_settings_exit(verbose, interface)
